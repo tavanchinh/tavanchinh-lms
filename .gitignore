@@ -5,3 +5,6 @@
 .vscode/
 .idea/
 *.log
+config/google_drive.json
+app/config/google_drive.json
+stream_oauth2.php

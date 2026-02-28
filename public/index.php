@@ -25,6 +25,13 @@ $router->add('store-assign', 'AdminController@storeAssign');
 $router->add('admin/students', 'AdminController@students');
 $router->add('admin/students/store', 'AdminController@storeStudent');
 
+
+$router->add('my-courses', 'CourseController@myCourses');
+$router->add('watch/{slug}/{id}', 'CourseController@watch');
+$router->add('course/stream/{id}', 'CourseController@stream');
+
+
+
 // Lấy URL hiện tại từ biến $_GET['url'] do .htaccess tạo ra
 $url = isset($_GET['url']) ? $_GET['url'] : '/';
 $router->dispatch($url);

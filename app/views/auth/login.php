@@ -18,21 +18,33 @@
 <body>
 
 <div class="login-container">
-    <h2>CMS LOGIN</h2>
+    <h2>Đăng nhập</h2>
     
     <?php if (isset($error)): ?>
         <div class="error"><?php echo $error; ?></div>
     <?php endif; ?>
 
+    <?php 
+        $saved_email = $_COOKIE['user_email'] ?? ''; 
+        $saved_pass  = $_COOKIE['user_pass'] ?? ''; 
+        $is_remembered = isset($_COOKIE['user_email']) ? 'checked' : '';
+    ?>
+
     <form action="/login-process" method="POST">
         <div class="form-group">
             <label>Email</label>
-            <input type="email" name="email" required placeholder="admin@example.com">
+            <input type="email" name="email" required value="<?php echo $saved_email; ?>" placeholder="admin@example.com">
         </div>
         <div class="form-group">
             <label>Mật khẩu</label>
-            <input type="password" name="password" required placeholder="******">
+            <input type="password" name="password" required value="<?php echo $saved_pass; ?>" placeholder="******">
         </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" name="remember" id="remember" <?php echo $is_remembered; ?> style="width: auto; cursor: pointer;">
+            <label for="remember" style="margin-bottom: 0; cursor: pointer; font-size: 14px;">Ghi nhớ đăng nhập</label>
+        </div>
+
         <button type="submit">Đăng nhập</button>
     </form>
 </div>

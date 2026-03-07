@@ -18,6 +18,10 @@ class CourseModel extends Database {
                 VALUES (?, ?, ?, 'completed')";
         return $this->query($sql, [$userId, $courseId, $price]);
     }
+    public function findById($id) {
+        $sql = "SELECT * FROM courses WHERE id = ? LIMIT 1";
+        return $this->query($sql, [$id])->fetch();
+    }
 
     public function getAllCourses() {
         // Lấy tất cả khóa học, có thể sắp xếp theo vị trí (position)
@@ -58,6 +62,40 @@ class CourseModel extends Database {
     }
 
 
+    /**
+ * Cập nhật thông tin khóa học
+ */
+public function updateCourse($id, $data) {
+    // Nếu có ảnh mới thì cập nhật cả ảnh, nếu không thì giữ nguyên ảnh cũ
+    $sql = "UPDATE courses SET 
+            category_id = ?, 
+            name = ?, 
+            price = ?, 
+            sale_price = ?, 
+            summary = ?, 
+            description = ?, 
+            level = ?, 
+            status = ?, 
+            image = ?
+            WHERE id = ?";
+            
+    $stmt = $this->db->prepare($sql);
+    
+    return $stmt->execute([
+        $data['category_id'],
+        $data['name'],
+        $data['price'],
+        $data['sale_price'] ?? 0,
+        $data['summary'],
+        $data['description'],
+        $data['level'],
+        $data['status'] ?? 1,
+        $data['image'], // Tên file ảnh (cũ hoặc mới)
+        $id
+    ]);
+}
+
+
     public function assignUserToCourse($userId, $courseId) {
         // Kiểm tra xem đã gán chưa để tránh trùng lặp (tùy chọn)
         $checkSql = "SELECT * FROM user_courses WHERE user_id = ? AND course_id = ?";
@@ -67,5 +105,38 @@ class CourseModel extends Database {
 
         $sql = "INSERT INTO user_courses (user_id, course_id, created_at) VALUES (?, ?, NOW())";
         return $this->query($sql, [$userId, $courseId]);
+    }
+
+    /**
+     * Đồng bộ danh sách khóa học của học viên
+     */
+    public function syncUserCourses($studentId, $courseIds) {
+        // 1. Xóa tất cả các gán cũ
+        $sqlDelete = "DELETE FROM user_courses WHERE user_id = ?";
+        $stmtDelete = $this->db->prepare($sqlDelete);
+        $stmtDelete->execute([$studentId]);
+
+        // 2. Gán lại danh sách mới (Bỏ cột created_at nếu bảng chưa có)
+        if (!empty($courseIds)) {
+            // Chỉ chèn vào 2 cột chắc chắn có là user_id và course_id
+            $sqlInsert = "INSERT INTO user_courses (user_id, course_id) VALUES (?, ?)";
+            $stmtInsert = $this->db->prepare($sqlInsert);
+            
+            foreach ($courseIds as $courseId) {
+                $stmtInsert->execute([$studentId, $courseId]);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Lấy danh sách ID các khóa học học viên ĐÃ tham gia
+     */
+    public function getUserEnrolledIds($userId) {
+        $sql = "SELECT course_id FROM user_courses WHERE user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        // Trả về mảng phẳng chỉ chứa ID: [1, 4, 7]
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 }

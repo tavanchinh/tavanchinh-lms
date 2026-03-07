@@ -14,37 +14,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="/dashboard">TAVANCHINH</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link active" href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/students"><i class="bi bi-people"></i> Học viên</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/courses"><i class="bi bi-book"></i> Khóa học</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> Cài đặt</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/notifications"><i class="bi bi-bell"></i> Thông báo</a>
-                </li>
-            </ul>
-            <div class="d-flex align-items-center text-white">
-                <span class="me-3">Chào, <strong><?= $_SESSION['user_name'] ?></strong></span>
-                <a href="/logout" class="btn btn-outline-danger btn-sm">Thoát</a>
-            </div>
-        </div>
-    </div>
-</nav>
+<?php include __DIR__ . '/layouts/header.php'; ?>
 
 <div class="container">
     <?php if (isset($_GET['assign_success'])): ?>

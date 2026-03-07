@@ -12,6 +12,22 @@ class UserModel extends Database {
         return $this->query($sql, [$email])->fetch();
     }
 
+    /**
+     * Tìm người dùng theo ID (Dùng cho checkLogin từ Cookie)
+     */
+    public function findById($id) {
+        $sql = "SELECT * FROM users WHERE id = ? LIMIT 1";
+        
+        // 1. Chuẩn bị câu lệnh (Prepare)
+        $stmt = $this->db->prepare($sql);
+        
+        // 2. Thực thi với mảng tham số (Execute)
+        $stmt->execute([$id]);
+        
+        // 3. Lấy dữ liệu (Fetch)
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function getAllStudents() {
         $sql = "SELECT id, name, email, phone_number, created_at FROM users WHERE role = 'student'";
         return $this->query($sql)->fetchAll();
@@ -56,5 +72,24 @@ class UserModel extends Database {
     public function checkEmailExists($email) {
         $sql = "SELECT id FROM users WHERE email = ?";
         return $this->query($sql, [$email])->fetch();
+    }
+    
+    /**
+     * Cập nhật thông tin cơ bản của người dùng
+     */
+    public function updateUser($id, $data) {
+        // Kiểm tra xem có cập nhật mật khẩu mới không
+        if (!empty($data['password'])) {
+            // Đổi phone -> phone_number
+            $sql = "UPDATE users SET name = ?, email = ?, phone_number = ?, password = ? WHERE id = ?";
+            $params = [$data['name'], $data['email'], $data['phone'], $data['password'], $id];
+        } else {
+            // Đổi phone -> phone_number
+            $sql = "UPDATE users SET name = ?, email = ?, phone_number = ? WHERE id = ?";
+            $params = [$data['name'], $data['email'], $data['phone'], $id];
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 }

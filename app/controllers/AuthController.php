@@ -23,32 +23,48 @@ class AuthController extends BaseController {
     }
 
     public function login() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $email = $_POST['email'];
-            $password = $_POST['password'];
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+        $remember = isset($_POST['remember']); 
 
-            $userModel = new UserModel();
-            $user = $userModel->findByEmail($email);
-            //echo "<pre>"; print_r($user); echo "</pre>"; // Debug thông tin user lấy được từ DB
-            //echo "Password nhập vào: " . $password . "<br>"; // Debug password nhập vào
-            //echo "Password hash " . password_hash($password, PASSWORD_DEFAULT) . "<br>";
-            //echo "Password hash trong DB: " . $user['password'] . "<br>"; die(); // Dừng ở đây để xem thông tin debug
-            // Kiểm tra user và mật khẩu (Sử dụng password_verify)
-            if ($user && password_verify($password, $user['password'])) {
-                // Lưu thông tin vào Session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['name'];
-                $_SESSION['user_role'] = $user['role'];
+        $userModel = new UserModel();
+        $user = $userModel->findByEmail($email);
 
-                header("Location: /dashboard");
-            } else {
-                $this->view('auth/login', ['error' => 'Email hoặc mật khẩu không đúng!']);
+        if ($user && password_verify($password, $user['password'])) {
+            // 1. Lưu Session như cũ
+            $_SESSION['user_id']   = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_role'] = $user['role'];
+
+            // 2. Xử lý Ghi nhớ đăng nhập (Cookie)
+            if ($remember) {
+                $expiry = time() + (7 * 24 * 60 * 60); // 7 ngày
+                setcookie('remember_user', $user['id'], $expiry, "/");
+                // Tạo một token bảo mật dựa trên hash password (nếu đổi pass, token này sẽ hỏng -> an toàn)
+                setcookie('remember_token', md5($user['password']), $expiry, "/");
             }
+
+            header("Location: /dashboard");
+            exit;
+        } else {
+            $this->view('auth/login', ['error' => 'Email hoặc mật khẩu không đúng!']);
         }
     }
+}
+
+    
 
     public function logout() {
         session_destroy();
-        header("Location: /login");
+        
+        // Xóa Cookie bằng cách cho hết hạn ở quá khứ
+        if (isset($_COOKIE['remember_user'])) {
+            setcookie('remember_user', '', time() - 3600, "/");
+            setcookie('remember_token', '', time() - 3600, "/");
+        }
+
+        header("Location: /dang-nhap");
+        exit;
     }
 }

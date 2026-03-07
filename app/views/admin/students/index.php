@@ -1,5 +1,47 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
-
+<style>
+    .course-selector {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    .course-card-item {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        background: #f8f9fa;
+        margin-bottom: 8px;
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .course-card-item:hover {
+        background: #eef2f7;
+    }
+    /* Khi được chọn (Active) */
+    .course-card-item.active {
+        border-color: #0d6efd;
+        background: #e7f1ff;
+    }
+    .course-card-item .check-icon {
+        display: none;
+        color: #0d6efd;
+        font-size: 1.2rem;
+    }
+    .course-card-item.active .check-icon {
+        display: block;
+    }
+    .course-card-item img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+</style>
 <div class="container-fluid py-4" style="background-color: #f0f2f5; min-height: 100vh;">
     <div class="container">
         <div class="row">
@@ -71,7 +113,11 @@
                                         <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Hoạt động</span>
                                     </td>
                                     <td class="text-end pe-3">
-                                        <a href="/students/edit/<?= $user['id'] ?>" class="text-primary"><i class="bi bi-pencil-square"></i></a>
+                                        <button type="button" 
+                                                class="btn btn-sm text-primary" 
+                                                onclick='openEditStudentModal(<?= json_encode($user) ?>)'>
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -112,6 +158,23 @@
                         <input type="password" name="password" class="form-control py-2" placeholder="Nhập mật khẩu" required>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Gán khóa học (Click để chọn nhiều)</label>
+                        <div class="course-selector">
+                            <?php foreach ($courses as $course): ?>
+                                <div class="course-card-item" onclick="toggleCourse(this, <?= $course['id'] ?>)">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small"><?= $course['name'] ?></div>
+                                        <div class="text-muted small"><?= number_format($course['price']) ?> VNĐ</div>
+                                    </div>
+                                    <i class="bi bi-check-circle-fill check-icon"></i>
+                                    <input type="checkbox" name="course_ids[]" value="<?= $course['id'] ?>" class="d-none">
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="form-text small">Mẹo: Click vào thẻ để chọn hoặc bỏ chọn khóa học.</div>
+                    </div>
+
                     <div class="d-flex justify-content-end mt-4 pt-3 border-top">
                         <button type="submit" class="btn btn-primary px-4 py-2 fw-bold" style="border-radius: 8px;">
                             Tạo mới
@@ -122,4 +185,129 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" style="color: #334155;">Chỉnh sửa tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditStudent">
+                    <input type="hidden" name="id" id="edit_s_id">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Họ và tên</label>
+                                <input type="text" name="name" id="edit_s_name" class="form-control py-2" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input type="email" name="email" id="edit_s_email" class="form-control py-2" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Số điện thoại</label>
+                                <input type="text" name="phone_number" id="edit_s_phone" class="form-control py-2">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-danger">Mật khẩu mới (Để trống nếu không đổi)</label>
+                                <input type="password" name="password" class="form-control py-2">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Khóa học tham gia (Click để chọn)</label>
+                            <div class="course-selector" id="edit_course_list">
+                                <?php foreach ($courses as $course): ?>
+                                    <div class="course-card-item" data-id="<?= $course['id'] ?>" onclick="toggleCourse(this, <?= $course['id'] ?>)">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold" style="font-size: 0.8rem;"><?= $course['name'] ?></div>
+                                        </div>
+                                        <i class="bi bi-check-circle-fill check-icon"></i>
+                                        <input type="checkbox" name="course_ids[]" value="<?= $course['id'] ?>" class="d-none">
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary px-4 fw-bold" onclick="submitEditStudent()">Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    function toggleCourse(element, courseId) {
+        // Tìm checkbox ẩn bên trong phần tử vừa click
+        const checkbox = element.querySelector('input[type="checkbox"]');
+        
+        // Đảo ngược trạng thái checkbox
+        checkbox.checked = !checkbox.checked;
+        
+        // Thêm hoặc xóa class 'active' để đổi màu giao diện
+        if (checkbox.checked) {
+            element.classList.add('active');
+        } else {
+            element.classList.remove('active');
+        }
+    }
+
+    // 1. Hàm mở Modal và nạp dữ liệu
+    function openEditStudentModal(user) {
+        document.getElementById('edit_s_id').value = user.id;
+        document.getElementById('edit_s_name').value = user.name;
+        document.getElementById('edit_s_email').value = user.email;
+        document.getElementById('edit_s_phone').value = user.phone_number;
+
+        // Reset tất cả thẻ khóa học về trạng thái chưa chọn
+        const cards = document.querySelectorAll('#edit_course_list .course-card-item');
+        cards.forEach(card => {
+            card.classList.remove('active');
+            card.querySelector('input[type="checkbox"]').checked = false;
+        });
+
+        // Gọi AJAX để lấy danh sách khóa học mà học viên ĐÃ THAM GIA
+        fetch(`/admin/students/get-courses/${user.id}`)
+            .then(response => response.json())
+            .then(enrolledIds => {
+                enrolledIds.forEach(courseId => {
+                    const card = document.querySelector(`#edit_course_list .course-card-item[data-id="${courseId}"]`);
+                    if (card) {
+                        card.classList.add('active');
+                        card.querySelector('input[type="checkbox"]').checked = true;
+                    }
+                });
+            });
+
+        const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+        modal.show();
+    }
+
+    // 2. Hàm gửi dữ liệu cập nhật
+    function submitEditStudent() {
+        const form = document.getElementById('formEditStudent');
+        const formData = new FormData(form);
+
+        fetch('/admin/students/update-ajax', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../app/models/UserModel.php';
 class BaseController {
     public function __construct() {
         // Khởi động session nếu chưa có
@@ -19,12 +20,33 @@ class BaseController {
         }
     }
 
-    // Kiểm tra xem người dùng đã đăng nhập chưa
+    
     protected function checkLogin() {
-        if (!isset($_SESSION['user_id'])) {
-            header("Location: /login");
-            exit();
+        // Nếu đã có Session thì cho qua luôn
+        if (isset($_SESSION['user_id'])) {
+            return true;
         }
+
+        // Nếu không có Session, kiểm tra Cookie "Ghi nhớ"
+        if (isset($_COOKIE['remember_user']) && isset($_COOKIE['remember_token'])) {
+            $userId = $_COOKIE['remember_user'];
+            $token  = $_COOKIE['remember_token'];
+
+            $userModel = new UserModel();
+            $user = $userModel->findById($userId); // Bạn cần viết hàm findById trong UserModel
+
+            if ($user && md5($user['password']) === $token) {
+                // Tái tạo lại Session từ Cookie
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_role'] = $user['role'];
+                return true;
+            }
+        }
+
+        // Nếu cả 2 đều không có, đá về trang login
+        header("Location: /dang-nhap");
+        exit;
     }
 
     // Kiểm tra quyền (Admin hoặc Staff)

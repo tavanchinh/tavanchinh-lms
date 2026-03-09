@@ -85,6 +85,9 @@ $isAdminPage = strpos($_SERVER['REQUEST_URI'], 'admin') !== false || isset($isBa
                 <li class="<?= ($activePage == 'courses') ? 'active' : '' ?>">
                     <a href="/admin/courses"><i class="bi bi-journal-text me-2"></i> Khóa học</a>
                 </li>
+                <li class="<?= ($activePage == 'staff') ? 'active' : '' ?>">
+                    <a href="/admin/staff"><i class="bi bi-person-badge me-2"></i> Nhân viên</a>
+                </li>
                 <li class="<?= ($activePage == 'students') ? 'active' : '' ?>">
                     <a href="/admin/students"><i class="bi bi-people me-2"></i> Học viên</a>
                 </li>

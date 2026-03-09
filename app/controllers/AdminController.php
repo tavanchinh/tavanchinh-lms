@@ -42,6 +42,21 @@ class AdminController extends BaseController {
     }
 
     /**
+     * Danh sách nhân viên
+     */
+    public function staff() {
+        $userModel = new UserModel();
+        $staff = $userModel->getAllStaff(); 
+        $courseModel = new CourseModel();
+
+        $this->view('admin/staff/index', [
+            'users' => $staff,
+            'courses' => $courseModel->getAllCourses(), 
+            'title' => 'Quản lý nhân viên'
+        ]);
+    }
+
+    /**
      * Lưu học viên mới
      */
     public function storeStudent() {

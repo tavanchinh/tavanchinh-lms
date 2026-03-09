@@ -11,12 +11,26 @@
                     </a>
                 </div>
 
-                <form action="/courses/store" method="POST" enctype="multipart/form-data">
+                <form action="/admin/courses/store" method="POST" enctype="multipart/form-data">
                     <div class="row">
                         <div class="col-md-7">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Tên khóa học <span class="text-danger">*</span></label>
                                 <input type="text" name="name" class="form-control" placeholder="Nhập tên khóa học..." required>
+                            </div>
+                            
+                            <div class="mb-3" style="margin-bottom: 15px; text-align: center;">
+                                <label class="fw-bold" style="display: block; text-align: left; margin-bottom: 8px;">Ảnh đại diện</label>
+                                <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                    <img id="course_preview" 
+                                        src="/uploads/<?= $course['image'] ?: 'default.jpg' ?>" 
+                                        style="width: 100%; height: auto; min-height: 150px; object-fit: cover; display: block;">
+                                    
+                                    <label for="course_image" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                        <i class="bi bi-camera"></i> Thay đổi
+                                    </label>
+                                </div>
+                                <input type="file" name="image" id="course_image" hidden accept="image/*">
                             </div>
 
                             <div class="mb-3">
@@ -68,11 +82,6 @@
                                     </select>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Ảnh đại diện</label>
-                                    <input type="file" name="image" class="form-control" accept="image/*">
-                                    <div class="form-text">Kích thước gợi ý: 800x450px.</div>
-                                </div>
 
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Vị trí hiển thị</label>
@@ -95,5 +104,30 @@
         </div>
     </div>
 </div>
+<script>
+    // Xử lý preview ảnh khi chọn file mới
+    document.getElementById('course_image').addEventListener('change', function(event) {
+        const [file] = event.target.files;
+        if (file) {
+            document.getElementById('course_preview').src = URL.createObjectURL(file);
+        }
+    }); 
+    const priceFormat = document.getElementById('price_format');
+    const priceRaw = document.getElementById('price_raw');
 
+    priceFormat.addEventListener('input', function(e) {
+        // 1. Lấy giá trị chỉ bao gồm số
+        let value = this.value.replace(/\D/g, '');
+        
+        // 2. Cập nhật vào input ẩn để gửi lên server (dạng số thuần 5000000)
+        priceRaw.value = value;
+        
+        // 3. Định dạng lại hiển thị có dấu chấm (dạng 5.000.000)
+        if (value !== "") {
+            this.value = new Intl.NumberFormat('vi-VN').format(value);
+        } else {
+            this.value = "";
+        }
+    });
+</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

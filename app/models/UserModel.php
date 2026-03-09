@@ -33,6 +33,11 @@ class UserModel extends Database {
         return $this->query($sql)->fetchAll();
     }
 
+    public function getAllStaff() {
+        $sql = "SELECT id, name, email, phone_number, created_at FROM users WHERE role <> 'student'";
+        return $this->query($sql)->fetchAll();
+    }
+
 
     // Hàm lấy tất cả người dùng (Dùng cho quản trị)
     public function getAllUsers() {

@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học trực tuyến | TAVANCHINH</title>
-    
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    <style>
+
         :root { 
             --header-height: 70px; 
             --sidebar-width: 400px;
@@ -95,9 +82,6 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
             color: var(--yt-red) !important;
             cursor: pointer !important;
-        }
-        .vjs-fullscreen-control .vjs-control-text{
-            
         }
 
         .video-js:hover .vjs-big-play-button {
@@ -383,43 +367,56 @@
             overflow-y: auto; 
             padding: 10px; 
         }
+        /* Sidebar danh sách bài học bên phải */
+.playlist-section {
+    flex: 1;
+    background-color: #fff;
+    border-left: 1px solid #ddd;
+    overflow-y: auto;
+    max-width: 400px;
+}
 
-        .lesson-item { 
-            display: flex; 
-            align-items: center; 
-            padding: 12px; 
-            text-decoration: none; 
-            color: #0f0f0f; 
-            border-radius: 12px; 
-            margin-bottom: 6px;
-            transition: all 0.2s ease !important;
-        }
-        
-        .lesson-item:hover { 
-            background: #f2f2f2; 
-            transform: translateX(2px);
-        }
-        
-        .lesson-item.active { 
-            background: #eff6ff; 
-            color: var(--primary-color); 
-            font-weight: 600; 
-            border-left: 4px solid var(--primary-color);
-            padding-left: 8px;
-        }
-        
-        .lesson-thumbnail {
-            width: 100px; 
-            aspect-ratio: 16/9; 
-            background: #e9ecef;
-            border-radius: 8px; 
-            margin-right: 12px; 
-            flex-shrink: 0;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            overflow: hidden;
-        }
+.chapter-title {
+    background-color: #f8f9fa;
+    padding: 12px 15px;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+}
+
+.lesson-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f1f1f1;
+    text-decoration: none;
+    color: #333;
+}
+
+.lesson-item:hover {
+    background-color: #e9ecef;
+}
+
+.lesson-item.active {
+    background-color: #cfe2ff;
+    border-left: 4px solid #0d6efd;
+}
+
+.lesson-item i {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.lesson-info {
+    font-size: 0.9rem;
+}
+
+.lesson-duration {
+    font-size: 0.75rem;
+    color: #999;
+}
 
         .playlist-body::-webkit-scrollbar { 
             width: 6px; 
@@ -443,177 +440,4 @@
             .main-container { flex-direction: column; }
             .playlist-sidebar { width: 100%; position: static; max-height: none; }
         }
-    </style>
-</head>
-<body>
-
-<nav class="navbar navbar-expand-lg navbar-frontend">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="#">
-            <i class="bi bi-play-btn-fill text-danger fs-3 me-2"></i> TAVANCHINH
-        </a>
-        <div class="d-flex align-items-center">
-            <span class="me-3 d-none d-sm-inline small">Chào, <strong>Tạ Văn Chỉnh</strong></span>
-            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">T</div>
-        </div>
-    </div>
-</nav>
-
-<div class="main-container">
-    <div class="video-section">
-        <div class="video-player-container">
-            <!-- ✅ QUAN TRỌNG: Xóa data-setup='{}' để tránh xung đột khởi tạo -->
-            <video
-                id="my-player"
-                class="video-js vjs-theme-city"
-                controls
-                preload="auto"
-            >
-                <source src="/course/stream/123" type="video/mp4" />
-                <p class="vjs-no-js">
-                    Để xem video này, vui lòng bật JavaScript.
-                </p>
-            </video>
-        </div>
-        
-        <div class="video-info">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h1 class="fw-bold h4 mb-0">Bài 1: Giới thiệu cấu trúc MVC trong PHP</h1>
-                <span id="finish-badge" class="badge bg-secondary d-none">Đã hoàn thành</span>
-            </div>
-            <p class="text-muted small">1,234 lượt xem • 26/02/2026</p>
-            <hr>
-            <div class="lesson-content">
-                <h5 class="fw-bold mb-3">Nội dung bài học</h5>
-                <div style="line-height: 2;">
-                    <p>Mô hình MVC (Model-View-Controller) giúp tách biệt logic nghiệp vụ khỏi giao diện người dùng...</p>
-                    <div style="height: 600px; background: #f8f9fa; border-radius: 12px; padding: 20px; border: 1px dashed #ccc;" class="mt-4 text-center">
-                        Nội dung bài học chi tiết...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="playlist-sidebar">
-        <div class="playlist-header">
-            <h6 class="mb-2 fw-bold">Nội dung khóa học</h6>
-            <div class="progress rounded-pill" style="height: 6px;">
-                <div id="course-progress" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 20%"></div>
-            </div>
-            <div class="d-flex justify-content-between mt-2">
-                <small class="text-muted" style="font-size: 11px;">Tiến độ bài học</small>
-                <small id="progress-text" class="text-primary fw-bold" style="font-size: 11px;">20%</small>
-            </div>
-        </div>
-        <div class="playlist-body" id="playlist-body">
-            <!-- ✅ JavaScript sẽ render các bài học vào đây -->
-        </div>
-    </div>
-</div>
-
-<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-
-<script>
-    // ✅ FIX 1: Dùng DOMContentLoaded để đảm bảo tất cả DOM đã sẵn sàng
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        // ✅ Render playlist items (thay thế document.write)
-        const playlistBody = document.getElementById('playlist-body');
-        for(let i = 1; i <= 15; i++) {
-            let activeClass = (i === 1) ? 'active' : '';
-            let icon = (i < 1) ? 'bi-check-circle-fill text-success' : 'bi-play-circle';
-            
-            const lessonItem = document.createElement('a');
-            lessonItem.href = '#';
-            lessonItem.className = `lesson-item ${activeClass}`;
-            lessonItem.innerHTML = `
-                <div class="lesson-thumbnail"><i class="bi ${icon}"></i></div>
-                <div class="small">Bài học số ${i}: Tiêu đề bài học ${i}</div>
-            `;
-            playlistBody.appendChild(lessonItem);
-        }
-
-        // ✅ Kiểm tra xem Video.js đã tải
-        if (typeof videojs !== 'undefined') {
-            const Button = videojs.getComponent('Button');
-
-            // ✅ FIX 2: Class PrevButton - thiết lập controlText đúng cách
-            class PrevButton extends Button {
-                constructor(player, options = {}) {
-                    super(player, options);
-                    this.controlText('Bài trước');
-                }
-                
-                createEl() {
-                    const button = super.createEl();
-                    button.className = 'vjs-prev-button vjs-control vjs-button';
-                    button.innerHTML = '<i class="bi bi-skip-backward-fill" style="line-height: 50px; font-size: 1.2rem;"></i>';
-                    return button;
-                }
-                
-                handleClick() {
-                    console.log("Quay lại bài trước");
-                    // TODO: Thêm logic chuyển bài trước
-                }
-            }
-            videojs.registerComponent('PrevButton', PrevButton);
-
-            // ✅ FIX 3: Class NextButton - thiết lập controlText đúng cách
-            class NextButton extends Button {
-                constructor(player, options = {}) {
-                    super(player, options);
-                    this.controlText('Bài tiếp theo');
-                }
-                
-                createEl() {
-                    const button = super.createEl();
-                    button.className = 'vjs-next-button vjs-control vjs-button';
-                    button.innerHTML = '<i class="bi bi-skip-forward-fill" style="line-height: 50px; font-size: 1.2rem;"></i>';
-                    return button;
-                }
-                
-                handleClick() {
-                    console.log("Chuyển bài tiếp theo");
-                    // TODO: Thêm logic chuyển bài tiếp theo
-                }
-            }
-            videojs.registerComponent('NextButton', NextButton);
-
-            // ✅ FIX 4: Khởi tạo Player (chỉ một lần sau khi registerComponent)
-            const player = videojs('my-player', {
-                playbackRates: [0.5, 1, 1.5, 2],
-                controlBar: {
-                    currentTimeDisplay: true,
-                    timeDivider: true,
-                    durationDisplay: true,
-                    remainingTimeDisplay: false,
-                    children: [
-                        'playToggle',
-                        'PrevButton',
-                        'NextButton',
-                        'volumePanel',
-                        'progressControl',
-                        'spacer',
-                        'currentTimeDisplay',
-                        'timeDivider',
-                        'durationDisplay',
-                        'playbackRateMenuButton',
-                        'fullscreenToggle',
-                    ],
-                },
-            });
-            
-            // Optionally log khi player sẵn sàng
-            player.ready(function() {
-                console.log('✅ Video player đã khởi tạo thành công!');
-            });
-        } else {
-            console.error('❌ Video.js chưa được tải!');
-        }
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    

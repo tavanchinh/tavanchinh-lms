@@ -8,7 +8,7 @@ class CourseModel extends Database {
 
     // Lấy tất cả khóa học đang hoạt động để nhân viên chọn
     public function getAllActive() {
-        $sql = "SELECT id, name, price FROM courses WHERE status = 1 ORDER BY position ASC";
+        $sql = "SELECT id, name, price, image, slug FROM courses WHERE status = 1 ORDER BY position ASC";
         return $this->query($sql)->fetchAll();
     }
 
@@ -70,12 +70,14 @@ public function updateCourse($id, $data) {
     $sql = "UPDATE courses SET 
             category_id = ?, 
             name = ?, 
+            slug = ?,
             price = ?, 
             sale_price = ?, 
             summary = ?, 
             description = ?, 
             level = ?, 
             status = ?, 
+            position = ?,
             image = ?
             WHERE id = ?";
             
@@ -84,12 +86,14 @@ public function updateCourse($id, $data) {
     return $stmt->execute([
         $data['category_id'],
         $data['name'],
+        $data['slug'],
         $data['price'],
         $data['sale_price'] ?? 0,
         $data['summary'],
         $data['description'],
         $data['level'],
         $data['status'] ?? 1,
+        $data['position'] ?? 0,
         $data['image'], // Tên file ảnh (cũ hoặc mới)
         $id
     ]);
@@ -138,5 +142,44 @@ public function updateCourse($id, $data) {
         $stmt->execute([$userId]);
         // Trả về mảng phẳng chỉ chứa ID: [1, 4, 7]
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+
+    /**
+     * Lấy danh sách đầy đủ thông tin các khóa học học viên ĐÃ tham gia
+     */
+    public function getUserEnrolledCourses($userId) {
+        $sql = "SELECT c.* FROM courses c JOIN user_courses uc ON c.id = uc.course_id WHERE uc.user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        // Trả về mảng phẳng chỉ chứa ID: [1, 4, 7]
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findBySlug($slug) {
+        // Truy vấn lấy thông tin khóa học theo slug
+        $sql = "SELECT * FROM courses WHERE slug = :slug AND status = 1 LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['slug' => $slug]);
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function checkOwnership($userId, $courseId) {
+        // Nếu không có userId (chưa đăng nhập) thì chắc chắn chưa mua
+        if (!$userId) return false;
+
+        $sql = "SELECT id FROM user_courses 
+                WHERE user_id = :user_id AND course_id = :course_id 
+                LIMIT 1";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'user_id' => $userId,
+            'course_id' => $courseId
+        ]);
+
+        // Nếu fetch() có dữ liệu, trả về true, ngược lại false
+        return $stmt->fetch() ? true : false;
     }
 }

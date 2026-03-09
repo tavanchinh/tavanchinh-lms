@@ -4,20 +4,19 @@ class Router {
 
     // Đăng ký đường dẫn (Nâng cấp để hỗ trợ {slug}, {id})
     public function add($url, $controllerAction) {
-        // Chuyển đổi các tham số động {name} thành Regex
-        // Ví dụ: watch/{slug}/{id} -> watch/(?P<slug>[a-z0-9-]+)/(?P<id>[0-9]+)
         $route = preg_replace('/\{([a-z]+)\}/', '(?P<\1>[a-z0-9-]+)', $url);
-        $route = "#^" . trim($route, '/') . "$#";
+
+        //Trim xong nếu là rỗng thì để rỗng, không thì giữ nguyên
+        $routePath = trim($route, '/');
+        $routeRegex = "#^" . $routePath . "$#";
         
-        $this->routes[$route] = $controllerAction;
+        $this->routes[$routeRegex] = $controllerAction;
     }
 
     // Xử lý yêu cầu
     public function dispatch($url) {
         // Chuẩn hóa URL: Xóa dấu gạch chéo ở đầu và cuối
         $url = trim($url, '/');
-        if ($url == '') $url = '/';
-
         $found = false;
 
         // Duyệt qua danh sách các Route đã đăng ký dưới dạng Regex

@@ -26,9 +26,10 @@ class LessonModel extends Database {
      * Lấy chi tiết một bài học theo ID
      */
     public function findById($id) {
-        $sql = "SELECT * FROM lessons WHERE id = ? LIMIT 1";
-        $result = $this->db->query($sql, [$id]);
-        return $result->fetch();
+        $sql = "SELECT * FROM lessons WHERE id = :id LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -92,8 +93,14 @@ class LessonModel extends Database {
      * Xóa bài học
      */
     public function delete($id) {
-        $sql = "DELETE FROM lessons WHERE id = ?";
-        return $this->db->query($sql, [$id]);
+        // 1. Chuẩn bị câu lệnh SQL với placeholder :id
+        $sql = "DELETE FROM lessons WHERE id = :id";
+        
+        // 2. Sử dụng prepare thay vì query
+        $stmt = $this->db->prepare($sql);
+        
+        // 3. Thực thi với mảng tham số
+        return $stmt->execute(['id' => $id]);
     }
 
 

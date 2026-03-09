@@ -1,4 +1,7 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../core/Router.php';
 require_once '../core/Database.php';
 
@@ -23,6 +26,7 @@ $router->add('admin/students', 'AdminController@students');
 $router->add('admin/students/store', 'AdminController@storeStudent');
 $router->add('admin/students/get-courses/{id}', 'AdminController@getCourses');
 $router->add('admin/students/update-ajax', 'AdminController@updateStudentAjax');
+$router->add('admin/staff', 'AdminController@staff');
 
 // ==========================================
 // 3. QUẢN LÝ KHÓA HỌC (COURSE CONTROLLER)
@@ -53,12 +57,30 @@ $router->add('admin/lesson/update-ajax', 'LessonController@updateAjax');
 // ==========================================
 // 5. FRONTEND (GIAO DIỆN HỌC VIÊN)
 // ==========================================
+$router->add('trang-chu', 'HomeController@index'); 
+$router->add('', 'HomeController@index');
+$router->add('profile', 'ProfileController@index');
+$router->add('profile/update', 'ProfileController@update');
+$router->add('/{slug}', 'CourseController@detail'); // Ví dụ: /khoa-hoc-lap-trinh
 $router->add('my-courses', 'CourseController@myCourses');
-$router->add('watch/{slug}/{id}', 'CourseController@watch');
+$router->add('learning/{slug}', 'CourseController@learning');
 $router->add('course/stream/{id}', 'CourseController@stream');
+$router->add('course/getStreamToken/{id}', 'CourseController@getStreamToken');
+
 
 // ==========================================
 // THỰC THI ROUTER
 // ==========================================
-$url = isset($_GET['url']) ? $_GET['url'] : '/';
+
+// Lấy URL từ biến $_GET, nếu không có thì mặc định là chuỗi rỗng
+$url = isset($_GET['url']) ? $_GET['url'] : '';
+
+// Cắt bỏ dấu gạch chéo ở đầu và cuối (ví dụ: "/trang-chu/" thành "trang-chu")
+$url = trim($url, '/');
+
+// Quan trọng: Nếu sau khi trim mà URL là "/" hoặc rỗng, hãy chắc chắn nó là ''
+if ($url === '/') {
+    $url = '';
+}
+//die($url);
 $router->dispatch($url);

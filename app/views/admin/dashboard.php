@@ -16,7 +16,7 @@
 
 <?php include __DIR__ . '/layouts/header.php'; ?>
 
-<div class="container">
+<div class="container-fluid">
     <?php if (isset($_GET['assign_success'])): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i> Gán khóa học cho học viên thành công!

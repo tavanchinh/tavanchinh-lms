@@ -26,6 +26,28 @@ class AdminController extends BaseController {
         $this->view('admin/dashboard', $data);
     }
 
+    // app/controllers/UserController.php
+
+    public function accounts() {
+        // 1. Lấy tham số từ URL
+        $tab = $_GET['tab'] ?? 'student'; // Mặc định là học viên
+        $search = $_GET['search'] ?? '';
+
+        // 2. Gọi Model lấy dữ liệu
+        $userModel = new UserModel();
+        $users = $userModel->getAccounts($tab, $search);
+        $courseModel = new CourseModel();
+
+        // 3. Trả về View
+        return $this->view('admin/users/accounts', [
+            'users' => $users,
+            'currentTab' => $tab,
+            'search' => $search,
+            'courses' => $courseModel->getAllCourses(), 
+            'title' => 'Quản lý tài khoản'
+        ]);
+    }
+
     /**
      * Danh sách học viên
      */
@@ -74,7 +96,7 @@ class AdminController extends BaseController {
             $userData = [
                 'name'     => $_POST['name'],
                 'email'    => $_POST['email'],
-                'phone'    => $_POST['phone_number'],
+                'phone_number'    => $_POST['phone_number'],
                 'password' => password_hash($_POST['password'], PASSWORD_DEFAULT)
             ];
 
@@ -89,9 +111,9 @@ class AdminController extends BaseController {
                         $courseModel->assignUserToCourse($studentId, $courseId);
                     }
                 }
-                header("Location: /admin/students?success=1");
+                header("Location: /admin/accounts?success=1");
             } else {
-                header("Location: /admin/students?error=system");
+                header("Location: /admin/accounts?error=system");
             }
             exit();
         }
@@ -133,6 +155,41 @@ class AdminController extends BaseController {
         } else {
             echo json_encode(['success' => false, 'message' => 'Cập nhật thất bại']);
         }
+        exit;
+    }
+
+    
+
+    // app/controllers/AdminController.php
+
+    public function deleteUser($id) {
+        // 1. Tận dụng logic checkRole: Chỉ cho phép 'admin' được thực hiện lệnh xóa
+        // Mặc dù construct cho cả staff vào, nhưng hành động XÓA phải lọc lại lần nữa
+        //var_dump($_SESSION); // Debug session để kiểm tra thông tin người dùng
+        //die();
+        if ($_SESSION['user_role'] !== 'admin') {
+            $_SESSION['error_msg'] = "Chỉ Quản trị viên cao cấp mới có quyền xóa tài khoản!";
+            header('Location: /admin/accounts');
+            exit;
+        }
+
+        // 2. Kiểm tra tránh tự xóa chính mình (Bảo vệ tài khoản đang đăng nhập)
+        if ($_SESSION['user_id'] == $id) {
+            $_SESSION['error_msg'] = "Bạn không thể tự xóa chính mình!";
+            header('Location: /admin/accounts');
+            exit;
+        }
+
+        // 3. Thực hiện xóa qua Model
+        $userModel = new UserModel();
+        if ($userModel->delete($id)) {
+            $_SESSION['success_msg'] = "Đã xóa tài khoản thành công.";
+        } else {
+            $_SESSION['error_msg'] = "Lỗi: Không thể xóa dữ liệu từ hệ thống.";
+        }
+        session_write_close(); // Đảm bảo session đã được ghi trước khi chuyển hướng
+
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/admin/accounts'));
         exit;
     }
 }

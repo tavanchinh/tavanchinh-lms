@@ -216,6 +216,7 @@ class CourseController extends BaseController {
         // 1. Khởi tạo các Model cần thiết
         $courseModel = new CourseModel();
         $chapterModel = new ChapterModel();
+        $lessonModel = new LessonModel();
 
         // 2. Lấy thông tin khóa học theo slug
         $course = $courseModel->findBySlug($slug);
@@ -234,6 +235,16 @@ class CourseController extends BaseController {
 
         // 4. Lấy danh sách chương và bài học
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
+
+        $firstLesson = null;
+        if (!empty($chapters)) {
+            // Lấy chương đầu tiên
+            $firstChapter = reset($chapters); 
+            if (!empty($firstChapter['lessons'])) {
+                // Lấy bài học đầu tiên của chương đó
+                $firstLesson = reset($firstChapter['lessons']); 
+            }
+        }
         
         // 5. Nếu KHÔNG sở hữu, lọc ra chỉ những bài cho phép học thử
         if (!$isOwned) {
@@ -243,13 +254,22 @@ class CourseController extends BaseController {
                 });
             }
         }
+
+        // Lấy danh sách ID bài học đã hoàn thành
+        $completedLessonIds = [];
+        if ($userId) {
+            $completedLessonIds = $lessonModel->getCompletedLessonIds($userId, $course['id']);
+        }
+        
         
         // 6. Truyền dữ liệu sang View
         $this->view('frontend/course/learning', [
             'course'   => $course,
             'chapters' => $chapters,
             'isOwned'  => $isOwned,
-            'isTrial'  => !$isOwned // Nếu chưa mua thì mặc định là đang ở chế độ học thử
+            'isTrial'  => !$isOwned, // Nếu chưa mua thì mặc định là đang ở chế độ học thử
+            'firstLesson' => $firstLesson,
+            'completedLessonIds' => $completedLessonIds
         ]);
     }
 

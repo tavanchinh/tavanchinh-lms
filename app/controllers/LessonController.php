@@ -73,4 +73,107 @@ class LessonController extends BaseController {
             exit; // Kết thúc để không render thêm giao diện thừa
         }
     }
+
+    public function completeLesson() {
+        // 1. Mở và đóng Session nhanh để tránh treo web (như đã thảo luận)
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $userId = $_SESSION['user_id'] ?? null;
+        session_write_close(); 
+
+        // 2. Kiểm tra bảo mật cơ bản
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$userId) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Yêu cầu không hợp lệ'], 403);
+        }
+
+        // 3. Đọc dữ liệu từ JavaScript gửi lên
+        $input = json_decode(file_get_contents('php://input'), true);
+        $lessonId = $input['lesson_id'] ?? null;
+
+        if (!$lessonId) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Thiếu ID bài học']);
+        }
+
+        // 4. Gọi Model xử lý (Đây là lý do Controller ngắn gọn)
+        $lessonModel = new LessonModel();
+        $lesson = $lessonModel->findById($lessonId);
+
+        if (!$lesson) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Bài học không tồn tại']);
+        }
+
+        // Lưu trạng thái hoàn thành vào bảng user_lessons
+        $result = $lessonModel->markAsCompleted($userId, $lessonId, $lesson['course_id']);
+
+        if ($result) {
+            // Tìm bài tiếp theo để trả về cho Client mở khóa giao diện
+            $nextLesson = $lessonModel->getNextLesson($lesson['course_id'], $lesson['position']);
+            
+            return $this->jsonResponse([
+                'success' => true,
+                'message' => 'Chúc mừng bạn đã hoàn thành bài học!',
+                'next_lesson_id' => $nextLesson ? $nextLesson['id'] : null
+            ]);
+        }
+
+        return $this->jsonResponse(['success' => false, 'message' => 'Lỗi lưu tiến độ']);
+    }
+
+
+    /**
+     * Hàm hỗ trợ trả về dữ liệu dạng JSON và dừng chương trình
+     */
+    private function jsonResponse($data, $code = 200) {
+        // Ngăn chặn việc gửi thêm bất kỳ dữ liệu thừa nào (như lỗi <br />)
+        if (ob_get_length()) ob_clean(); 
+        
+        http_response_code($code);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data);
+        exit;
+    }
+
+
+    // app/controllers/LessonController.php
+
+    public function adminStudy() {
+        // 1. Kiểm tra quyền Admin ở đây (nếu bạn có hệ thống phân quyền)
+        // if ($_SESSION['role'] !== 'admin') { die('Từ chối truy cập'); }
+
+        $lessonModel = new LessonModel();
+        $progressData = $lessonModel->getStudentProgress();
+
+        // 2. Tính toán % và định dạng dữ liệu
+        foreach ($progressData as &$item) {
+            $item['percent'] = ($item['total_lessons'] > 0) 
+                ? round(($item['completed_lessons'] / $item['total_lessons']) * 100) 
+                : 0;
+        }
+
+        // 3. Trả về view admin (đảm bảo bạn đã tạo file view tương ứng)
+        return $this->view('admin/lessons/study_progress', [
+            'progress' => $progressData,
+            'title' => 'Quản lý Tiến độ Học viên'
+        ]);
+    }
+
+    public function adminFastComplete() {
+        // Chỉ xử lý nếu là POST để tránh việc click nhầm link
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $userId = $_POST['user_id'] ?? null;
+            $courseId = $_POST['course_id'] ?? null;
+
+            if ($userId && $courseId) {
+                $lessonModel = new LessonModel();
+                $result = $lessonModel->completeAllForStudent($userId, $courseId);
+                
+                if ($result) {
+                    // Bạn có thể dùng Session để báo thành công
+                    // $_SESSION['flash_message'] = "Đã mở khóa thành công!";
+                }
+            }
+        }
+        // Quay lại trang danh sách sau khi xử lý xong
+        header('Location: /admin/study');
+        exit;
+    }
 }

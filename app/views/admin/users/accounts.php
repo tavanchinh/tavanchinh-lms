@@ -6,6 +6,7 @@
         border: 1px solid #eee;
         padding: 10px;
         border-radius: 8px;
+        background: #fff;
     }
     .course-card-item {
         cursor: pointer;
@@ -19,10 +20,7 @@
         align-items: center;
         gap: 12px;
     }
-    .course-card-item:hover {
-        background: #eef2f7;
-    }
-    /* Khi được chọn (Active) */
+    .course-card-item:hover { background: #eef2f7; }
     .course-card-item.active {
         border-color: #0d6efd;
         background: #e7f1ff;
@@ -32,100 +30,100 @@
         color: #0d6efd;
         font-size: 1.2rem;
     }
-    .course-card-item.active .check-icon {
-        display: block;
-    }
-    .course-card-item img {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        border-radius: 6px;
-    }
+    .course-card-item.active .check-icon { display: block; }
 </style>
-<div class="container-fluid py-4" style="background-color: #f0f2f5; min-height: 100vh;">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-2">
-                <div class="list-group border-0 shadow-sm mb-4">
-                    <a href="#" class="list-group-item list-group-item-action active border-0 py-3">
-                        <i class="bi bi-person-badge me-2"></i> Tài khoản
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action border-0 py-3">
-                        <i class="bi bi-people me-2"></i> Nhóm
-                    </a>
-                    <a href="/admin/study" class="list-group-item list-group-item-action border-0 py-3">
-                        <i class="bi bi-book me-2"></i> Học tập
-                    </a>
-                </div>
-            </div>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="bi bi-people-fill me-2"></i>Quản lý tài khoản</h3>
+        <button class="btn btn-primary px-3" data-bs-toggle="modal" data-bs-target="#createStudentModal">
+            <i class="bi bi-plus-lg"></i> Tạo tài khoản
+        </button>
+    </div>
 
-            <div class="col-md-10">
-                <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0 text-uppercase" style="color: #003366;">Danh sách tài khoản</h5>
-                        
-                        <div class="d-flex gap-2">
-                            <div class="input-group" style="width: 300px;">
-                                <input type="text" class="form-control border-end-0" placeholder="Tìm kiếm theo họ tên, email...">
-                                <span class="input-group-text bg-white border-start-0"><i class="bi bi-search text-muted"></i></span>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form action="" method="GET" class="row g-3">
+                <input type="hidden" name="tab" value="<?= $currentTab ?>">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0" 
+                               placeholder="Tìm theo tên, email hoặc số điện thoại..." 
+                               value="<?= htmlspecialchars($search) ?>">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark w-100">Lọc kết quả</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-3 p-2 bg-white rounded shadow-sm">
+        <li class="nav-item">
+            <a class="nav-link <?= $currentTab == 'admin' ? 'active' : '' ?>" 
+               href="?tab=admin&search=<?= $search ?>"> Quản trị viên</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?= $currentTab == 'staff' ? 'active' : '' ?>" 
+               href="?tab=staff&search=<?= $search ?>"> Nhân viên</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?= $currentTab == 'student' ? 'active' : '' ?>" 
+               href="?tab=student&search=<?= $search ?>"> Học viên</a>
+        </li>
+    </ul>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Thông tin</th>
+                        <th>Email & SĐT</th>
+                        <th>Ngày đăng ký</th>
+                        <th class="text-end pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($users)): foreach ($users as $user): ?>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3 bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <?= strtoupper(substr($user['name'], 0, 1)) ?>
+                                </div>
+                                <div>
+                                    <div class="fw-bold"><?= htmlspecialchars($user['name']) ?></div>
+                                    <span class="badge bg-<?= $user['role'] == 'admin' ? 'danger' : ($user['role'] == 'staff' ? 'info' : 'success') ?>-subtle text-dark small">
+                                        <?= strtoupper($user['role']) ?>
+                                    </span>
+                                </div>
                             </div>
-                            <button class="btn btn-outline-secondary"><i class="bi bi-filter"></i> Bộ lọc</button>
-                            <button class="btn btn-outline-secondary"><i class="bi bi-download"></i> Export</button>
-                            <button class="btn btn-primary px-3" data-bs-toggle="modal" data-bs-target="#createStudentModal">
-                                <i class="bi bi-plus-lg"></i> Tài khoản
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="text-muted" style="background-color: #f8f9fa;">
-                                <tr>
-                                    <th class="border-0 ps-3">Avatar</th>
-                                    <th class="border-0">Họ tên</th>
-                                    <th class="border-0">Liên hệ</th>
-                                    <th class="border-0 text-center">Ngày tạo</th>
-                                    <th class="border-0 text-center">Trạng thái</th>
-                                    <th class="border-0 text-end pe-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($users as $user): ?>
-                                <tr class="border-bottom" style="height: 80px;">
-                                    <td class="ps-3">
-                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 45px; height: 45px; font-size: 0.8rem; border: 1px solid #dee2e6;">
-                                            <?= mb_strtoupper(mb_substr($user['name'], 0, 1)) ?>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="fw-semibold" style="color: #334155;"><?= $user['name'] ?></span>
-                                    </td>
-                                    <td>
-                                        <div class="small text-muted"><?= $user['phone_number'] ?? 'Chưa cập nhật' ?></div>
-                                        <div class="small text-primary d-flex align-items-center">
-                                            <?= $user['email'] ?> <i class="bi bi-check-circle-fill ms-1 text-success" style="font-size: 0.7rem;"></i>
-                                        </div>
-                                    </td>
-                                    <td class="text-center text-muted small">
-                                        <?= date('d/m/Y H:i', strtotime($user['created_at'])) ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Hoạt động</span>
-                                    </td>
-                                    <td class="text-end pe-3">
-                                        <button type="button" 
-                                                class="btn btn-sm text-primary" 
-                                                onclick='openEditStudentModal(<?= json_encode($user) ?>)'>
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                        </td>
+                        <td>
+                            <div class="small text-muted"><i class="bi bi-envelope me-1"></i><?= htmlspecialchars($user['email']) ?></div>
+                            <div class="small text-muted"><i class="bi bi-phone me-1"></i><?= htmlspecialchars($user['phone_number']) ?></div>
+                        </td>
+                        <td><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick='openEditStudentModal(<?= json_encode($user) ?>)'>
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button onclick="confirmDelete(<?= $user['id'] ?>)" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">Không tìm thấy tài khoản nào trong nhóm này.</td>
+                    </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -309,5 +307,48 @@
             }
         });
     }
+
+
+    window.confirmDelete = function(userId) {
+        Swal.fire({
+            title: 'Xác nhận xóa?',
+            text: "Dữ liệu người dùng và tiến độ học tập sẽ bị xóa vĩnh viễn!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Vâng, xóa ngay!',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Chuyển hướng đến route xóa của bạn
+                // Ví dụ: /admin/users/delete/5
+                window.location.href = '/admin/users/delete/' + userId;
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if (isset($_SESSION['error_msg'])): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: '<?= $_SESSION['error_msg'] ?>',
+                confirmButtonText: 'Đóng'
+            });
+            <?php unset($_SESSION['error_msg']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['success_msg'])): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: '<?= $_SESSION['success_msg'] ?>',
+                timer: 3000, // Tự đóng sau 3 giây
+                showConfirmButton: false
+            });
+            <?php unset($_SESSION['success_msg']); ?>
+        <?php endif; ?>
+    });
 </script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

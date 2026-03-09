@@ -19,14 +19,16 @@ $router->add('dang-xuat', 'AuthController@logout');
 // 2. ADMIN DASHBOARD & HỌC VIÊN
 // ==========================================
 // Trang chủ quản trị (Thống kê, danh sách nhanh)
-$router->add('dashboard', 'AdminController@index');
+$router->add('admin', 'AdminController@index');
 
-// Quản lý học viên
+// Quản lý học viên / nhân viên
+$router->add('admin/accounts', 'AdminController@accounts');
 $router->add('admin/students', 'AdminController@students');
 $router->add('admin/students/store', 'AdminController@storeStudent');
 $router->add('admin/students/get-courses/{id}', 'AdminController@getCourses');
 $router->add('admin/students/update-ajax', 'AdminController@updateStudentAjax');
 $router->add('admin/staff', 'AdminController@staff');
+$router->add('admin/users/delete/{id}', 'AdminController@deleteUser');
 
 // ==========================================
 // 3. QUẢN LÝ KHÓA HỌC (COURSE CONTROLLER)
@@ -53,6 +55,8 @@ $router->add('admin/chapter/update-ajax', 'ChapterController@updateAjax');
 $router->add('admin/lesson/store', 'LessonController@store');
 $router->add('admin/lesson/delete/{id}', 'LessonController@delete');
 $router->add('admin/lesson/update-ajax', 'LessonController@updateAjax');
+$router->add('admin/study', 'LessonController@adminStudy');
+$router->add('admin/study/fast-complete', 'LessonController@adminFastComplete');
 
 // ==========================================
 // 5. FRONTEND (GIAO DIỆN HỌC VIÊN)
@@ -66,6 +70,7 @@ $router->add('my-courses', 'CourseController@myCourses');
 $router->add('learning/{slug}', 'CourseController@learning');
 $router->add('course/stream/{id}', 'CourseController@stream');
 $router->add('course/getStreamToken/{id}', 'CourseController@getStreamToken');
+$router->add('lesson/complete', 'LessonController@completeLesson');
 
 
 // ==========================================

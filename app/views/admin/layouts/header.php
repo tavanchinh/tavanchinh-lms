@@ -79,17 +79,17 @@ $isAdminPage = strpos($_SERVER['REQUEST_URI'], 'admin') !== false || isset($isBa
                 <small class="text-warning"><?= strtoupper($_SESSION['user_role']) ?></small>
             </div>
             <ul class="list-unstyled">
-                <li class="<?= ($activePage == 'dashboard') ? 'active' : '' ?>">
-                    <a href="/dashboard"><i class="bi bi-speedometer2 me-2"></i> Tổng quan</a>
+                <li class="<?= ($activePage == 'admin') ? 'active' : '' ?>">
+                    <a href="/admin"><i class="bi bi-speedometer2 me-2"></i> Tổng quan</a>
                 </li>
                 <li class="<?= ($activePage == 'courses') ? 'active' : '' ?>">
                     <a href="/admin/courses"><i class="bi bi-journal-text me-2"></i> Khóa học</a>
                 </li>
-                <li class="<?= ($activePage == 'staff') ? 'active' : '' ?>">
-                    <a href="/admin/staff"><i class="bi bi-person-badge me-2"></i> Nhân viên</a>
+                <li class="<?= ($activePage == 'accounts') ? 'active' : '' ?>">
+                    <a href="/admin/accounts"><i class="bi bi-people me-2"></i> Tài khoản</a>
                 </li>
-                <li class="<?= ($activePage == 'students') ? 'active' : '' ?>">
-                    <a href="/admin/students"><i class="bi bi-people me-2"></i> Học viên</a>
+                <li class="<?= ($activePage == 'study') ? 'active' : '' ?>">
+                    <a href="/admin/study"><i class="bi bi-mortarboard me-2"></i> Học tập</a>
                 </li>
                 <li><a href="/"><i class="bi bi-arrow-left-circle me-2"></i> Ra trang chủ</a></li>
                 <li><a href="/logout" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>

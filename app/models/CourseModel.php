@@ -107,7 +107,7 @@ public function updateCourse($id, $data) {
 
         if ($exists) return false; // Đã gán rồi
 
-        $sql = "INSERT INTO user_courses (user_id, course_id, created_at) VALUES (?, ?, NOW())";
+        $sql = "INSERT INTO user_courses (user_id, course_id, enrolled_at) VALUES (?, ?, NOW())";
         return $this->query($sql, [$userId, $courseId]);
     }
 

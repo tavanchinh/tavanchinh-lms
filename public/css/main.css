@@ -1,0 +1,149 @@
+:root {
+    --nav-bg: #ffffff;
+    --primary-color: #3b82f6; /* Xanh Royal hiện đại */
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+}
+
+body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: var(--text-main); }
+
+/* Navbar nâng cấp */
+.navbar { 
+    background: var(--nav-bg); 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+    padding: 0.8rem 0;
+    transition: all 0.3s ease;
+    z-index: 1021;
+}
+
+.navbar-brand {
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+    color: var(--text-main) !important;
+}
+
+.nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--primary-color) !important;
+}
+
+/* Nút đăng nhập tròn trịa */
+.btn-login {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-login:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Dropdown Menu chuyên nghiệp */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 0.8rem;
+}
+
+.dropdown-item {
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background-color: #f8fafc;
+    color: var(--primary-color);
+}
+
+/* Course Card (Giữ lại CSS của bạn nhưng tối ưu shadow) */
+.course-card { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    border: none;
+    border-radius: 16px; 
+    overflow: hidden; 
+}
+.course-card:hover { 
+    transform: translateY(-8px); 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; 
+}
+:root {
+    --footer-bg: #0f172a;       /* Xanh đen sâu cực sang */
+    --footer-text: #94a3b8;     /* Xám xanh nhạt cho chữ */
+    --footer-heading: #f8fafc;  /* Trắng tinh cho tiêu đề */
+    --accent-color: #38bdf8;    /* Xanh Sky nhẹ nhàng, không bị chói */
+    --border-color: #1e293b;    /* Màu đường kẻ ngăn cách */
+}
+
+footer {
+    background-color: var(--footer-bg) !important;
+    color: var(--footer-text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+footer h5, footer h6 {
+    color: var(--footer-heading);
+    margin-bottom: 1.5rem;
+}
+
+/* Hiệu ứng liên kết */
+footer a {
+    color: var(--footer-text) !important;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+footer a:hover {
+    color: var(--accent-color) !important;
+    padding-left: 4px; /* Nhích nhẹ sang phải khi hover */
+}
+
+/* Icon liên hệ */
+footer .bi {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+}
+
+/* Icon mạng xã hội */
+.social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-right: 10px;
+}
+
+.social-icons a:hover {
+    background: var(--accent-color);
+    color: #fff !important;
+    padding-left: 0; /* Reset hover padding cho icon */
+}
+
+/* Logo thanh toán */
+.payment-icons img {
+    filter: grayscale(1) brightness(1.5);
+    opacity: 0.5;
+    transition: 0.3s;
+    margin-left: 15px;
+}
+
+.payment-icons img:hover {
+    filter: grayscale(0) brightness(1);
+    opacity: 1;
+}

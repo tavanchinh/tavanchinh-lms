@@ -86,7 +86,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">Số điện thoại</label>
-                                    <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
+                                    <input type="text" name="phone_number" class="form-control" value="<?= htmlspecialchars($user['phone_number'] ?? '') ?>">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label fw-bold">Email (Không thể thay đổi)</label>

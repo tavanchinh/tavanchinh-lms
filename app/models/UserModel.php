@@ -187,6 +187,33 @@ class UserModel extends Database {
         }
     }
 
+    
+    public function updateInfo($id, $data) {
+        // 1. Xây dựng câu lệnh SQL động dựa trên việc có đổi mật khẩu hay không
+        $fields = "name = :name, phone_number = :phone_number";
+        $params = [
+            'id' => $id,
+            'name' => $data['name'],
+            'phone_number' => $data['phone_number']
+        ];
+
+        // 2. Nếu có mật khẩu mới thì mới cập nhật cột password
+        if (!empty($data['password'])) {
+            $fields .= ", password = :password";
+            $params['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        }
+        //print_r($params);die();
+        $sql = "UPDATE users SET $fields WHERE id = :id";
+        echo $sql;die();
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+        } catch (PDOException $e) {
+            error_log("Lỗi Update Profile: " . $e->getMessage());
+            return false;
+        }
+    }
+
 
     
 }

@@ -199,7 +199,7 @@
                             this.currentTime(PREVIEW_LIMIT); // Giữ kim ở mốc 10:00
 
                             if (!document.getElementById('limit-overlay')) {
-                                showLimitOverlay(currentId); // Gọi hàm hiển thị thông báo
+                                showVideoOverlay(currentId); // Gọi hàm hiển thị thông báo
                             }
                         }
                     }
@@ -260,10 +260,6 @@
                 });
             });
             
-            
-            
-
-
 
             // =========================================================
             // ✅ HÀM BỔ TRỢ (Định nghĩa dưới Player để điều khiển AJAX/URL)
@@ -400,7 +396,7 @@
         localStorage.removeItem('video_pos_' + lessonId);
 
         // 2. Ẩn thông báo khóa (overlay)
-        const overlay = document.getElementById('limit-overlay');
+        const overlay = document.getElementById('video-custom-overlay');
         if (overlay) overlay.remove();
 
         // 3. Đưa video về giây đầu tiên và phát lại

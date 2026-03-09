@@ -30,7 +30,7 @@
                             <div class="card-body pt-0">
                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                     <span class="text-danger fw-bold"><?= number_format($course['price'], 0, ',', '.') ?>đ</span>
-                                    <a href="/course/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-sm btn-primary rounded-pill px-3">Học ngay</a>
+                                    <a href="/<?= htmlspecialchars($course['slug']) ?>" class="btn btn-sm btn-primary rounded-pill px-3">Học ngay</a>
                                 </div>
                             </div>
                         </div>

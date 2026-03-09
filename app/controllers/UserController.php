@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../../core/BaseController.php';
 require_once __DIR__ . '/../models/CourseModel.php';
 
-class ProfileController extends BaseController {
+class UserController extends BaseController {
     
     public function __construct() {
         // Kiểm tra đăng nhập ngay khi vào bất kỳ hàm nào của Profile
@@ -36,12 +36,12 @@ class ProfileController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $userId = $_SESSION['user_id'];
             $name = $_POST['name'] ?? '';
-            $phone = $_POST['phone'] ?? '';
+            $phone = $_POST['phone_number'] ?? '';
             
             $userModel = new UserModel();
             
             // Cập nhật thông tin cơ bản
-            $userModel->updateInfo($userId, ['name' => $name, 'phone' => $phone]);
+            $userModel->updateInfo($userId, ['name' => $name, 'phone_number' => $phone]);
             
             // Cập nhật lại tên hiển thị trên Session
             $_SESSION['user_name'] = $name;

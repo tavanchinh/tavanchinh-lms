@@ -1,7 +1,7 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
 <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
-<link rel="stylesheet" href="/css/learning.css">
+<link rel="stylesheet" href="/css/learning.css?v=1.0.3">
 <div class="container">
     <div class="video-section">
         <div class="video-player-container">
@@ -108,6 +108,7 @@
     </div>
 </div>
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script src="https://unpkg.com/videojs-hls-quality-selector@2.0.0/dist/videojs-hls-quality-selector.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -156,6 +157,9 @@
             window.player = videojs('my-player', {
                 playbackRates: [0.5, 1, 1.5, 2],
                 controlBar: {
+                    playToggle: true,
+                    PrevButton: true,
+                    NextButton: true,
                     currentTimeDisplay: true,
                     timeDivider: true,
                     durationDisplay: true,
@@ -163,17 +167,23 @@
                     children: [
                         'playToggle', 'PrevButton', 'NextButton', 'volumePanel',
                         'progressControl', 'spacer', 'currentTimeDisplay',
-                        'timeDivider', 'durationDisplay', 'playbackRateMenuButton',
+                        'timeDivider', 'durationDisplay', 'playbackRateMenuButton','qualitySelector',
                         'fullscreenToggle',
                     ],
                 },
-            });
+            });            
             
             player.ready(function() {
-                console.log('✅ Video player đã khởi tạo thành công!');
+                //console.log('✅ Video player đã khởi tạo thành công!');
+
+                // 1. Kích hoạt plugin chọn chất lượng
+                if (typeof player.hlsQualitySelector === 'function') {
+                    player.hlsQualitySelector({ displayCurrentQuality: true });
+                }
 
                 // --- THÊM LOGIC GHI NHỚ VỊ TRÍ & TỰ CHUYỂN BÀI Ở ĐÂY ---
                 this.on('loadedmetadata', function() {
+                    // Khi video đã sẵn sàng, kiểm tra nếu có vị trí đã lưu cho bài học này
                     const currentId = document.querySelector('.lesson-item.active')?.getAttribute('data-id');
                     if (currentId) {
                         const savedTime = localStorage.getItem('video_pos_' + currentId);

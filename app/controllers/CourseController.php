@@ -274,38 +274,85 @@ class CourseController extends BaseController {
     }
 
     public function stream($id) {
-        // 1. XÁC THỰC TOKEN (Giữ nguyên bảo mật)
+        // 1. Kiểm tra quyền của học viên (Giữ nguyên logic cũ của bạn)
+
         $tokenFromUrl = $_GET['token'] ?? '';
         $savedTokenData = $_SESSION['video_tokens'][$id] ?? null;
-        $token = 'd608111e-65c0-43ae-82b6-82e7a80e48a7';
-        session_write_close(); 
-
         if (!$savedTokenData || $savedTokenData['token'] !== $tokenFromUrl || time() > $savedTokenData['expires']) {
             http_response_code(403);
-            die("Truy cập bị chặn.");
+            exit;
         }
 
         $lessonModel = new LessonModel();
         $lesson = $lessonModel->findById($id);
         if (!$lesson) { http_response_code(404); exit; }
 
-        // 2. Cấu hình Bunny.net
-        $libraryId = "614514"; // ID thư viện của bạn
-        $apiKey = "d651e95f-6cf9-48f2-a5aabac225c4-18a1-4962"; // Key bảo mật
-        $videoId = 'c73dc81f-b867-45eb-8bf7-549b8b963730'; //$lesson['bunny_video_id']; // Lưu ID video vào DB thay vì link Drive
+        $tokenFromUrl = $_GET['token'] ?? '';
+        $savedTokenData = $_SESSION['video_tokens'][$id] ?? null;
+        session_write_close(); 
 
-        // 3. Tạo Token bảo mật (Chống tải lậu/Lấy link)
-        $expires = time() + 3600; // Link sống trong 1 tiếng
-        $hash = base64_encode(md5($apiKey . $videoId . $expires, true));
-        $hash = str_replace(['+', '/', '='], ['-', '_', ''], $hash);
+        if (!$savedTokenData || $savedTokenData['token'] !== $tokenFromUrl || time() > $savedTokenData['expires']) {
+            http_response_code(403);
+            die("Truy cập bị chặn.");
+        }
+        // 1. Cấu hình Bunny của bạn
+        $libraryId = "614514"; 
+        $apiKey    = "d651e95f-6cf9-48f2-a5aabac225c4-18a1-4962"; 
+        $videoId   = $lesson['link_video'];
+        $pullZoneHost = "vz-2f4a27cf-8a9.b-cdn.net"; 
 
-        $signedUrl = "https://video.bunnycdn.com/play/{$libraryId}/{$videoId}?token={$hash}&expires={$expires}";
-        $directUrl = "https://video.bunnycdn.com/play/{$libraryId}/{$videoId}/playlist.m3u8?token={$token}&expires={$expires}";
+        // 2. Tạo Link gốc và Token
+        $expires = time() + 3600; 
+        $token = md5($apiKey . $videoId . $expires);
+        $masterUrl = "https://{$pullZoneHost}/{$videoId}/playlist.m3u8?token={$token}&expires={$expires}";
+        
+        // Đường dẫn gốc để nối link tuyệt đối
+        $baseUrl = "https://{$pullZoneHost}/{$videoId}/";
 
-        // 4. Redirect 307 - Google gánh băng thông, nay là Bunny gánh
-        http_response_code(307);
-        header("Location: " . $directUrl);
+        // 3. Đọc nội dung file Master từ Bunny
+        $content = file_get_contents($masterUrl);
+        if (!$content) { http_response_code(404); die(); }
+
+        $lines = explode("\n", $content);
+        $filteredLines = [];
+        $skipNext = false;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            // Lọc chất lượng thấp (< 720p)
+            if (strpos($line, 'RESOLUTION=') !== false) {
+                preg_match('/RESOLUTION=\d+x(\d+)/', $line, $matches);
+                $height = isset($matches[1]) ? (int)$matches[1] : 0;
+                if ($height > 0 && $height < 720) {
+                    $skipNext = true; 
+                    continue;
+                }
+            }
+
+            if ($skipNext) {
+                $skipNext = false;
+                continue;
+            }
+
+            // QUAN TRỌNG: Biến link tương đối thành tuyệt đối
+            // Nếu dòng không bắt đầu bằng '#' và không có 'http', thì đó là link file con
+            if (strpos($line, '#') !== 0 && strpos($line, 'http') !== 0) {
+                // Nối thêm baseUrl và truyền lại token/expires để các file con cũng có quyền truy cập
+                $line = $baseUrl . $line . (strpos($line, '?') !== false ? '&' : '?') . "token={$token}&expires={$expires}";
+            }
+
+            $filteredLines[] = $line;
+        }
+
+        // 4. Trả về cho VideoJS
+        header('Content-Type: application/x-mpegURL');
+        header('Access-Control-Allow-Origin: *'); // Tránh lỗi CORS
+        echo implode("\n", $filteredLines);
         exit;
+
+        
     }
     
 

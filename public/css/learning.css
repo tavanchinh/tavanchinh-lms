@@ -172,6 +172,7 @@ body {
 
 .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
 	overflow: hidden !important;
+	max-height: 20em;
 }
 
 .video-js .vjs-volume-panel .vjs-volume-control.vjs-volume-horizontal {
@@ -270,6 +271,9 @@ body {
 	order: 9;
 	padding: 0;
 }
+.video-js .vjs-time-control.vjs-current-time{
+	margin-right: 2px !important;
+}
 
 .video-js .vjs-current-time-display:before,
 .video-js .vjs-duration-display:before {
@@ -348,6 +352,7 @@ body {
 	margin-right: 0 !important;
 	flex: none;
 }
+
 
 /* ===== CỘT PHẢI (SIDEBAR) ===== */
 .playlist-sidebar {

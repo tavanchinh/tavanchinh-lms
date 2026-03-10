@@ -196,7 +196,8 @@
                     if (!IS_OWNED) {
                         if (this.currentTime() >= PREVIEW_LIMIT) {
                             this.pause();
-                            this.currentTime(PREVIEW_LIMIT); // Giữ kim ở mốc 10:00
+                            this.controls(false);
+                            //this.currentTime(PREVIEW_LIMIT); // Giữ kim ở mốc 10:00
 
                             if (!document.getElementById('limit-overlay')) {
                                 showVideoOverlay(currentId); // Gọi hàm hiển thị thông báo
@@ -285,7 +286,7 @@
                             // Nếu lấy được token, nạp video kèm token đó
                             player.src({
                                 src: '/course/stream/' + lessonId + '?token=' + data.token,
-                                type: 'video/mp4'
+                                type: 'application/x-mpegURL'
                             });
 
                             // Cập nhật giao diện (Active bài học)
@@ -371,7 +372,7 @@
                 <h3 class="mt-3 fw-bold">Hết thời gian học thử</h3>
                 <p class="mb-4">Vui lòng đăng ký khóa học để xem trọn bộ kiến thức và ủng hộ tác giả.</p>
                 <div class="d-flex gap-2">
-                    <a href="/course/<?= $course['slug'] ?>" class="btn btn-warning btn-lg fw-bold px-4">ĐĂNG KÝ NGAY</a>
+                    <a href="/<?= $course['slug'] ?>" class="btn btn-warning btn-lg fw-bold px-4">ĐĂNG KÝ NGAY</a>
                     <button onclick="resetTrial('${lessonId}')" class="btn btn-outline-light">Xem lại từ đầu</button>
                 </div>
             `;
@@ -402,6 +403,7 @@
         // 3. Đưa video về giây đầu tiên và phát lại
         if (player) {
             player.currentTime(0);
+            player.controls(true); // Hiển thị lại controls nếu bị ẩn
             player.play();
         }
     };

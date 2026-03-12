@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg sticky-top mb-4">
@@ -40,8 +39,8 @@
                                 <span class="text-dark fw-bold"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Thành viên') ?></span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end mt-2">
-                                <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
-                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                                <li><a class="dropdown-item" href="/tai-khoan"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
+                                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                     <li><a class="dropdown-item text-primary" href="/admin/accounts"><i class="bi bi-speedometer2 me-2"></i>Quản trị hệ thống</a></li>
                                     <li><a class="dropdown-item" href="/admin/study"><i class="bi bi-mortarboard me-2"></i>Quản lý học tập</a></li>
                                 <?php endif; ?>

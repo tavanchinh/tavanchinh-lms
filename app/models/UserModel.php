@@ -250,7 +250,7 @@ class UserModel extends Database {
         }
         //print_r($params);die();
         $sql = "UPDATE users SET $fields WHERE id = :id";
-        echo $sql;die();
+        //echo $sql;die();
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);

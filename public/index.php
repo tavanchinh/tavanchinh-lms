@@ -63,8 +63,8 @@ $router->add('admin/study/fast-complete', 'LessonController@adminFastComplete');
 // ==========================================
 $router->add('trang-chu', 'HomeController@index'); 
 $router->add('', 'HomeController@index');
-$router->add('profile', 'UserController@index');
-$router->add('profile/update', 'UserController@update');
+$router->add('tai-khoan', 'UserController@index');
+$router->add('cap-nhat-thong-tin', 'UserController@update');
 $router->add('/{slug}', 'CourseController@detail'); // Ví dụ: /khoa-hoc-lap-trinh
 $router->add('my-courses', 'CourseController@myCourses');
 $router->add('learning/{slug}', 'CourseController@learning');

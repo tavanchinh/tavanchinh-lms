@@ -92,7 +92,7 @@ $isAdminPage = strpos($_SERVER['REQUEST_URI'], 'admin') !== false || isset($isBa
                     <a href="/admin/study"><i class="bi bi-mortarboard me-2"></i> Học tập</a>
                 </li>
                 <li><a href="/"><i class="bi bi-arrow-left-circle me-2"></i> Ra trang chủ</a></li>
-                <li><a href="/logout" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                <li><a href="/dang-xuat" class="text-danger"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
             </ul>
         </nav>
         <div id="content">

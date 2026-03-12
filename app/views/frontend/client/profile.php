@@ -18,7 +18,7 @@
                     <a href="#tab-settings" class="list-group-item list-group-item-action border-0 rounded-3 mb-1" data-bs-toggle="list">
                         <i class="bi bi-person-gear me-2"></i> Cài đặt tài khoản
                     </a>
-                    <a href="/logout" class="list-group-item list-group-item-action border-0 rounded-3 text-danger">
+                    <a href="/dang-xuat" class="list-group-item list-group-item-action border-0 rounded-3 text-danger">
                         <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
                     </a>
                 </div>
@@ -29,7 +29,7 @@
             <?php if(isset($_GET['success'])): ?>
                 <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
                     Cập nhật thông tin thành công!
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
 

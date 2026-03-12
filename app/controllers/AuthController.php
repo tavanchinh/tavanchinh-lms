@@ -11,7 +11,7 @@ class AuthController extends BaseController {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
-            header("Location: /dashboard");
+            header("Location: /");
             exit();
         }
         $this->view('auth/login');
@@ -45,10 +45,10 @@ class AuthController extends BaseController {
                 setcookie('remember_token', md5($user['password']), $expiry, "/");
             }
 
-            header("Location: /dashboard");
+            header("Location: /");
             exit;
         } else {
-            $this->view('auth/login', ['error' => 'Email hoặc mật khẩu không đúng!']);
+            $this->view('auth/dang-nhap', ['error' => 'Email hoặc mật khẩu không đúng!']);
         }
     }
 }

@@ -67,9 +67,55 @@ class UserModel extends Database {
 
 
     // Hàm lấy tất cả người dùng (Dùng cho quản trị)
-    public function getAllUsers() {
-        return $this->query("SELECT id, name, email, role FROM users ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    public function getAllUsers($limit = null) {
+        $sql = "SELECT id, name, email, role FROM users ORDER BY registered_at DESC";
+        
+        if ($limit !== null) {
+            // Ép kiểu (int) để đảm bảo an toàn tuyệt đối trước khi nối chuỗi
+            $limit = (int)$limit;
+            $sql .= " LIMIT $limit"; 
+        }
+
+        // Truyền mảng rỗng vì không còn dấu ? nào trong câu lệnh SQL
+        return $this->query($sql, [])->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
+    // Hàm lấy dữ liệu có LIMIT và OFFSET
+    public function getAccountsPaginated($tab, $search, $limit, $offset) {
+        $role = $tab;
+        $sql = "SELECT id, name, email, phone_number, role, registered_at, created_at FROM users WHERE role = ?";
+        $params = [$role];
+
+        if (!empty($search)) {
+            $sql .= " AND (name LIKE ? OR email LIKE ? OR phone_number  LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        $sql .= " ORDER BY registered_at DESC LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+
+        return $this->query($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Hàm đếm tổng số bản ghi
+    public function countAccounts($tab, $search) {
+        $role = ($tab === 'admin') ? 'admin' : 'student';
+        $sql = "SELECT COUNT(*) as total FROM users WHERE role = ?";
+        $params = [$role];
+
+        if (!empty($search)) {
+            $sql .= " AND (name LIKE ? OR email LIKE ? OR phone_number LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        $result = $this->query($sql, $params)->fetch(PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    }
+
 
     public function create($data) {
         $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";

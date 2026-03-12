@@ -19,7 +19,7 @@ class AdminController extends BaseController {
 
         $data = [
             'courses' => $courseModel->getAllCourses(),
-            'users'   => $userModel->getAllUsers(), 
+            'users'   => $userModel->getAllUsers($limit = 10), 
             'title'   => 'Bảng điều khiển Admin'
         ];
 
@@ -30,12 +30,22 @@ class AdminController extends BaseController {
 
     public function accounts() {
         // 1. Lấy tham số từ URL
-        $tab = $_GET['tab'] ?? 'student'; // Mặc định là học viên
+        $tab = $_GET['tab'] ?? 'student';
         $search = $_GET['search'] ?? '';
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $perPage = 20; // Số học viên trên mỗi trang
+        $offset = ($page - 1) * $perPage;
 
         // 2. Gọi Model lấy dữ liệu
         $userModel = new UserModel();
-        $users = $userModel->getAccounts($tab, $search);
+        
+        // Lấy danh sách có phân trang
+        $users = $userModel->getAccountsPaginated($tab, $search, $perPage, $offset);
+        
+        // Lấy tổng số học viên để tính tổng số trang
+        $totalUsers = $userModel->countAccounts($tab, $search);
+        $totalPages = ceil($totalUsers / $perPage);
+
         $courseModel = new CourseModel();
 
         // 3. Trả về View
@@ -44,7 +54,10 @@ class AdminController extends BaseController {
             'currentTab' => $tab,
             'search' => $search,
             'courses' => $courseModel->getAllCourses(), 
-            'title' => 'Quản lý tài khoản'
+            'title' => 'Quản lý tài khoản',
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalUsers' => $totalUsers
         ]);
     }
 

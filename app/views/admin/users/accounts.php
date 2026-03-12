@@ -32,6 +32,26 @@
     }
     .course-card-item.active .check-icon { display: block; }
 </style>
+
+<?php
+    $delta = 2; // Số lượng trang hiển thị xung quanh trang hiện tại
+    $range = [];
+    for ($i = max(2, $currentPage - $delta); $i <= min($totalPages - 1, $currentPage + $delta); $i++) {
+        $range[] = $i;
+    }
+
+    if ($currentPage - $delta > 2) {
+        array_unshift($range, "...");
+    }
+    if ($currentPage + $delta < $totalPages - 1) {
+        $range[] = "...";
+    }
+
+    array_unshift($range, 1); // Luôn hiện trang 1
+    if ($totalPages > 1) {
+        $range[] = $totalPages; // Luôn hiện trang cuối
+    }
+?>
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold"><i class="bi bi-people-fill me-2"></i>Quản lý tài khoản</h3>
@@ -91,7 +111,7 @@
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
                                 <div class="avatar-sm me-3 bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <?= strtoupper(substr($user['name'], 0, 1)) ?>
+                                    <?= mb_strtoupper(mb_substr($user['name'], 0, 1, 'UTF-8'), 'UTF-8') ?>
                                 </div>
                                 <div>
                                     <div class="fw-bold"><?= htmlspecialchars($user['name']) ?></div>
@@ -105,7 +125,7 @@
                             <div class="small text-muted"><i class="bi bi-envelope me-1"></i><?= htmlspecialchars($user['email']) ?></div>
                             <div class="small text-muted"><i class="bi bi-phone me-1"></i><?= htmlspecialchars($user['phone_number']) ?></div>
                         </td>
-                        <td><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
+                        <td><?= date('d/m/Y', strtotime($user['registered_at'])) ?></td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
                                 <button type="button" class="btn btn-sm btn-outline-primary" onclick='openEditStudentModal(<?= json_encode($user) ?>)'>
@@ -125,6 +145,41 @@
                 </tbody>
             </table>
         </div>
+        <div class="d-flex justify-content-between align-items-center mt-4 p-3">
+        <div class="text-muted small">
+            Hiển thị trang <?= $currentPage ?> / <?= $totalPages ?> (Tổng <?= $totalUsers ?> học viên)
+        </div>
+        
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item <?= ($currentPage <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?tab=<?= $currentTab ?>&search=<?= $search ?>&page=1">Đầu</a>
+                </li>
+
+                <li class="page-item <?= ($currentPage <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?tab=<?= $currentTab ?>&search=<?= $search ?>&page=<?= $currentPage - 1 ?>">&laquo;</a>
+                </li>
+
+                <?php foreach ($range as $p): ?>
+                    <?php if ($p === "..."): ?>
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    <?php else: ?>
+                        <li class="page-item <?= ($p == $currentPage) ? 'active' : '' ?>">
+                            <a class="page-link" href="?tab=<?= $currentTab ?>&search=<?= $search ?>&page=<?= $p ?>"><?= $p ?></a>
+                        </li>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
+                <li class="page-item <?= ($currentPage >= $totalPages) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?tab=<?= $currentTab ?>&search=<?= $search ?>&page=<?= $currentPage + 1 ?>">&raquo;</a>
+                </li>
+
+                <li class="page-item <?= ($currentPage >= $totalPages) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?tab=<?= $currentTab ?>&search=<?= $search ?>&page=<?= $totalPages ?>">Cuối</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
     </div>
 </div>
 <div class="modal fade" id="createStudentModal" tabindex="-1" aria-hidden="true">

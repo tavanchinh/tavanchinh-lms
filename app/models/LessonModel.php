@@ -39,7 +39,7 @@ class LessonModel extends Database {
         // 1. Chuẩn bị câu lệnh SQL (Chỉ dùng các cột thực tế có trong DB và Form)
         $sql = "INSERT INTO lessons (course_id, chapter_id, name, link_video, duration, position, is_preview, status) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        $driveId = $this->extractDriveId($data['link_video']);
+        $driveId = $this->extractBunnyId($data['link_video']);
         
         // 2. Dùng prepare thay vì query để tránh lỗi Fatal Error
         $stmt = $this->db->prepare($sql);
@@ -60,7 +60,7 @@ class LessonModel extends Database {
     public function update($id, $data) {
 
         // Tự động lọc ID từ link video trước khi gán vào SQL
-        $driveId = $this->extractDriveId($data['link_video']);
+        $driveId = $this->extractBunnyId($data['link_video']);
 
         // 1. Câu lệnh SQL chuẩn (Chỉ dùng các cột thực tế trong DB)
         $sql = "UPDATE lessons SET 
@@ -203,6 +203,23 @@ class LessonModel extends Database {
         $pattern = '/[-\w]{25,}/'; 
         if (preg_match($pattern, $url, $matches)) {
             return $matches[0];
+        }
+
+        return $url; // Trả về gốc nếu không tìm thấy mẫu phù hợp
+    }
+
+    public function extractBunnyId($url) {
+        // 1. Nếu bản chất nó đã là UUID (dạng 8-4-4-4-12 ký tự) thì trả về luôn
+        $uuidPattern = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
+        if (preg_match($uuidPattern, trim($url))) {
+            return trim($url);
+        }
+
+        // 2. Pattern để tìm UUID nằm trong URL của Bunny (Embed hoặc Play link)
+        // Nó sẽ tìm chuỗi có định dạng xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        $pattern = '/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i';
+        if (preg_match($pattern, $url, $matches)) {
+            return $matches[1];
         }
 
         return $url; // Trả về gốc nếu không tìm thấy mẫu phù hợp

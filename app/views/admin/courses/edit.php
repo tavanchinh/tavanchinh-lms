@@ -160,7 +160,7 @@
                 <input type="text" name="name" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label class="form-label fw-bold">Google Drive ID</label>
+                <label class="form-label fw-bold">Link Video</label>
                 <input type="text" name="link_video" class="form-control" required>
             </div>
             <div class="row">
@@ -198,7 +198,7 @@
                 <input type="text" name="name" id="edit_l_name" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label class="form-label fw-bold">Google Drive ID</label>
+                <label class="form-label fw-bold">Link Video</label>
                 <input type="text" name="link_video" id="edit_l_video" class="form-control" required>
             </div>
             <div class="row">

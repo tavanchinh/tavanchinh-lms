@@ -153,7 +153,6 @@ class LessonController extends BaseController {
                 ? round(($item['completed_lessons'] / $item['total_lessons']) * 100) 
                 : 0;
         }
-
         return $this->view('admin/lessons/study_progress', [
             'progress' => $progressData,
             'title' => 'Quản lý Tiến độ Học viên',
@@ -165,23 +164,49 @@ class LessonController extends BaseController {
     }
 
     public function adminFastComplete() {
-        // Chỉ xử lý nếu là POST để tránh việc click nhầm link
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $userId = $_POST['user_id'] ?? null;
-            $courseId = $_POST['course_id'] ?? null;
-
-            if ($userId && $courseId) {
-                $lessonModel = new LessonModel();
-                $result = $lessonModel->completeAllForStudent($userId, $courseId);
-                
-                if ($result) {
-                    // Bạn có thể dùng Session để báo thành công
-                    // $_SESSION['flash_message'] = "Đã mở khóa thành công!";
-                }
-            }
+        // 1. Chỉ cho phép truy cập qua phương thức POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); // Method Not Allowed
+            echo json_encode(['success' => false, 'message' => 'Phương thức không được phép']);
+            exit;
         }
-        // Quay lại trang danh sách sau khi xử lý xong
-        header('Location: /admin/study');
-        exit;
+
+        // 2. Lấy dữ liệu từ POST
+        $userId = $_POST['user_id'] ?? null;
+        $courseId = $_POST['course_id'] ?? null;
+
+        // Header trả về định dạng JSON
+        header('Content-Type: application/json');
+
+        if ($userId && $courseId) {
+            try {
+                $lessonModel = new LessonModel();
+                // Gọi hàm xử lý (Hàm này nên dùng câu lệnh SQL "hủy diệt" mà tôi đã gợi ý trước đó)
+                $result = $lessonModel->completeAllForStudent($userId, $courseId);
+
+                if ($result) {
+                    echo json_encode([
+                        'success' => true, 
+                        'message' => 'Đã hoàn thành toàn bộ khóa học cho học viên!'
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'Không có bài học nào được cập nhật.'
+                    ]);
+                }
+            } catch (Exception $e) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Lỗi hệ thống: ' . $e->getMessage()
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Thiếu thông tin ID học viên hoặc khóa học.'
+            ]);
+        }
+        exit; // Kết thúc để tránh render ra các HTML thừa từ layout
     }
 }

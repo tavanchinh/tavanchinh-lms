@@ -157,18 +157,27 @@ class LessonModel extends Database {
     
 
     public function getStudentProgress() {
-        // Truy vấn kết hợp để lấy: Tên học viên, Tên khóa học, Số bài đã xong, Tổng số bài
+        // Chúng ta sử dụng LEFT JOIN để đếm bài học và tiến độ trong một lần truy vấn duy nhất
         $sql = "SELECT 
-                    u.id as user_id, u.name as fullname, u.email,
-                    c.id as course_id, c.name as course_name,
-                    (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) as total_lessons,
-                    (SELECT COUNT(*) FROM user_lessons ul 
-                    WHERE ul.user_id = u.id AND ul.course_id = c.id AND ul.is_completed = 1) as completed_lessons
+                    u.id as user_id, 
+                    u.name as fullname, 
+                    u.email,
+                    c.id as course_id, 
+                    c.name as course_name,
+                    -- Đếm số lượng ID bài học duy nhất thuộc khóa học này
+                    COUNT(DISTINCT l.id) as total_lessons,
+                    -- Chỉ đếm những bài học đã hoàn thành của user này trong khóa học này
+                    COUNT(DISTINCT CASE WHEN ul.is_completed = 1 THEN ul.lesson_id END) as completed_lessons
                 FROM users u
                 JOIN user_courses uc ON u.id = uc.user_id
                 JOIN courses c ON uc.course_id = c.id
+                -- Lấy danh sách tất cả bài học của khóa học
+                LEFT JOIN lessons l ON l.course_id = c.id
+                -- Lấy tiến độ tương ứng của học viên cho các bài học đó
+                LEFT JOIN user_lessons ul ON (ul.lesson_id = l.id AND ul.user_id = u.id)
+                GROUP BY u.id, c.id
                 ORDER BY u.name ASC";
-                
+                //echo $sql;die();    
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -227,17 +236,26 @@ class LessonModel extends Database {
 
 
     
-
-
     public function getStudentProgressPaginated($limit, $offset, $search = '') {
-        $sql = "SELECT u.id as user_id , u.name, u.email, c.name as course_name, u.registered_at as registration_date, uc.course_id as course_id,
-                COUNT(l.id) as total_lessons,
-                SUM(CASE WHEN up.is_completed = 1 THEN 1 ELSE 0 END) as completed_lessons
+        // Chúng ta sử dụng COUNT(DISTINCT) để đảm bảo mỗi bài học chỉ được đếm 1 lần
+        $sql = "SELECT 
+                    u.id as user_id, 
+                    u.name, 
+                    u.email, 
+                    c.id as course_id,
+                    c.name as course_name, 
+                    u.registered_at as registration_date,
+                    -- 1. Đếm số lượng bài học duy nhất thuộc khóa học này
+                    COUNT(DISTINCT l.id) as total_lessons,
+                    -- 2. Đếm số lượng bản ghi tiến độ đã hoàn thành duy nhất của học viên
+                    COUNT(DISTINCT CASE WHEN up.is_completed = 1 THEN up.lesson_id END) as completed_lessons
                 FROM users u
                 JOIN user_courses uc ON u.id = uc.user_id
                 JOIN courses c ON uc.course_id = c.id
-                LEFT JOIN lessons l ON c.id = l.course_id
-                LEFT JOIN user_progress up ON (u.id = up.user_id AND l.id = up.lesson_id)
+                -- LEFT JOIN với lessons để lấy danh sách bài học gốc
+                LEFT JOIN lessons l ON l.course_id = c.id
+                -- LEFT JOIN với tiến độ, nhưng phải khớp cả user_id và lesson_id
+                LEFT JOIN user_lessons up ON (up.lesson_id = l.id AND up.user_id = u.id)
                 WHERE 1=1";
         
         $params = [];
@@ -247,7 +265,10 @@ class LessonModel extends Database {
             $params = [$searchKey, $searchKey, $searchKey];
         }
 
-        $sql .= " GROUP BY u.id, c.id ORDER BY u.registered_at DESC LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        // Nhóm theo cả User và Course để tách biệt từng dòng
+        $sql .= " GROUP BY u.id, c.id 
+                ORDER BY u.registered_at DESC 
+                LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
 
         return $this->query($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -50,22 +50,22 @@
                         </td>
                         <td><?= $row['course_name'] ?></td>
                         <td>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center" id="progress-container-<?= $row['user_id'] ?>-<?= $row['course_id'] ?>">
                                 <div class="progress flex-grow-1" style="height: 12px;">
-                                    <div class="progress-bar bg-success" style="width: <?= $row['percent'] ?>%"></div>
+                                    <div class="progress-bar bg-success js-progress-bar" style="width: <?= $row['percent'] ?>%"></div>
                                 </div>
-                                <span class="ms-2 fw-bold small"><?= $row['percent'] ?>%</span>
+                                <span class="ms-2 fw-bold small js-progress-text"><?= $row['percent'] ?>%</span>
                             </div>
                             <small class="text-muted"><?= $row['completed_lessons'] ?>/<?= $row['total_lessons'] ?> bài đã xong</small>
                         </td>
                         <td class="text-end">
-                            <form action="/admin/fast-complete" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn mở khóa toàn bộ bài học cho học viên này?')">
-                                <input type="hidden" name="user_id" value="<?= $row['user_id'] ?>">
-                                <input type="hidden" name="course_id" value="<?= $row['course_id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-lightning-charge"></i> Hoàn thành tất cả
-                                </button>
-                            </form>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger rounded-pill px-3 btn-fast-complete" 
+                                    data-user-id="<?= $row['user_id'] ?>" 
+                                    data-course-id="<?= $row['course_id'] ?>"
+                                    data-user-name="<?= htmlspecialchars($row['name']) ?>">
+                                <i class="bi bi-lightning-charge"></i> Hoàn thành nhanh
+                            </button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -107,4 +107,73 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.querySelectorAll('.btn-fast-complete').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const courseId = this.getAttribute('data-course-id');
+            const userName = this.getAttribute('data-user-name');
+
+            Swal.fire({
+                title: 'Xác nhận mở khóa?',
+                text: `Bạn có chắc chắn muốn hoàn thành toàn bộ bài học cho học viên ${userName}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Đồng ý, mở hết!',
+                cancelButtonText: 'Hủy bỏ',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Hiển thị hiệu ứng loading
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        didOpen: () => { Swal.showLoading() },
+                        allowOutsideClick: false
+                    });
+
+                    // Gửi AJAX
+                    fetch('/admin/study/fast-complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `user_id=${userId}&course_id=${courseId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'Thành công!',
+                                `Đã mở khóa toàn bộ bài học cho ${userName}.`,
+                                'success'
+                            );
+                            // Tìm vùng chứa tiến độ của học viên vừa nhấn
+                            const container = document.getElementById(`progress-container-${userId}-${courseId}`);
+                            
+                            if (container) {
+                                const progressBar = container.querySelector('.js-progress-bar');
+                                const progressText = container.querySelector('.js-progress-text');
+
+                                // Hiệu ứng mượt mà
+                                progressBar.style.transition = "width 1s ease-in-out";
+                                progressBar.style.width = '100%';
+                                progressText.innerText = '100%';
+                                
+                                // Có thể đổi màu nút bấm hoặc ẩn đi vì đã xong
+                                btn.classList.remove('btn-outline-danger');
+                                btn.classList.add('btn-success');
+                                btn.innerHTML = '<i class="bi bi-check-lg"></i> Đã hoàn thành';
+                                btn.disabled = true;
+                            }
+
+                        } else {
+                            Swal.fire('Lỗi!', 'Không thể xử lý yêu cầu.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

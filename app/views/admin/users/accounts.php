@@ -73,7 +73,9 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-dark w-100">Lọc kết quả</button>
+                    <button type="submit" class="btn btn-primary w-100 rounded-3">
+                        <i class="bi bi-filter me-1"></i> Tìm kiếm
+                    </button>
                 </div>
             </form>
         </div>

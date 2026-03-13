@@ -224,4 +224,44 @@ class LessonModel extends Database {
 
         return $url; // Trả về gốc nếu không tìm thấy mẫu phù hợp
     }
+
+
+    
+
+
+    public function getStudentProgressPaginated($limit, $offset, $search = '') {
+        $sql = "SELECT u.id as user_id , u.name, u.email, c.name as course_name, u.registered_at as registration_date, uc.course_id as course_id,
+                COUNT(l.id) as total_lessons,
+                SUM(CASE WHEN up.is_completed = 1 THEN 1 ELSE 0 END) as completed_lessons
+                FROM users u
+                JOIN user_courses uc ON u.id = uc.user_id
+                JOIN courses c ON uc.course_id = c.id
+                LEFT JOIN lessons l ON c.id = l.course_id
+                LEFT JOIN user_progress up ON (u.id = up.user_id AND l.id = up.lesson_id)
+                WHERE 1=1";
+        
+        $params = [];
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ? OR u.phone_number LIKE ?)";
+            $searchKey = "%$search%";
+            $params = [$searchKey, $searchKey, $searchKey];
+        }
+
+        $sql .= " GROUP BY u.id, c.id ORDER BY u.registered_at DESC LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+
+        return $this->query($sql, $params)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countStudentProgress($search = '') {
+        $sql = "SELECT COUNT(*) as total FROM (
+                    SELECT u.id FROM users u 
+                    JOIN user_courses uc ON u.id = uc.user_id 
+                    WHERE (u.name LIKE ? OR u.email LIKE ? OR u.phone_number LIKE ?)
+                    GROUP BY u.id, uc.course_id
+                ) as subquery";
+                
+        $searchKey = "%$search%";
+        $result = $this->query($sql, [$searchKey, $searchKey, $searchKey])->fetch(PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    }
 }

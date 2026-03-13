@@ -1,10 +1,11 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <main>
-    <section class="py-5 text-center bg-white border-bottom mb-5">
-        <div class="container py-4">
-            <h1 class="display-5 fw-bold mb-3">Học tập không giới hạn</h1>
-            <p class="lead text-muted mx-auto" style="max-width: 600px;">Rất nhiều bài học chất lượng đang chờ bạn khám phá. Hãy bắt đầu hành trình ngay hôm nay!</p>
+    <section class="hero-section py-5 mb-5" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 1px solid #e2e8f0;">
+        <div class="container text-center py-5">
+            <h1 class="display-4 fw-bold text-dark mb-3">Học tập không giới hạn</h1>
+            <p class="lead text-muted mb-4 mx-auto" style="max-width: 600px;">Làm chủ quy trình thiết kế SketchUp và sản xuất CNC chuyên nghiệp cùng chuyên gia.</p>
+            <a href="#courses" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Khám phá khóa học</a>
         </div>
     </section>
 

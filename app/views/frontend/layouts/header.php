@@ -23,11 +23,13 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="/">Trang chủ</a></li>
+                    <?php $current_route = $_SERVER['REQUEST_URI']; ?>
+                    <li class="nav-item"><a class="nav-link <?= $current_route === '/' ? 'active-custom' : '' ?>" href="/">Trang chủ</a></li>
                     
                     <?php if (isset($_SESSION['user_id'])): ?>
+                        
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="/my-courses">
+                            <a class="nav-link text-dark <?= $current_route === '/khoa-hoc-cua-toi' ? 'active-custom' : '' ?>" href="/khoa-hoc-cua-toi">
                                 <i class="bi bi-play-circle me-1"></i> Khóa học của tôi
                             </a>
                         </li>
@@ -39,7 +41,7 @@
                                 <span class="text-dark fw-bold"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Thành viên') ?></span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end mt-2">
-                                <li><a class="dropdown-item" href="/tai-khoan"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
+                                <li><a class="dropdown-item" href="/trang-ca-nhan"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
                                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                     <li><a class="dropdown-item text-primary" href="/admin/accounts"><i class="bi bi-speedometer2 me-2"></i>Quản trị hệ thống</a></li>
                                     <li><a class="dropdown-item" href="/admin/study"><i class="bi bi-mortarboard me-2"></i>Quản lý học tập</a></li>

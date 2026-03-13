@@ -24,11 +24,14 @@ class UserController extends BaseController {
         
         $course = new CourseModel();
         $courses = $course->getUserEnrolledCourses($_SESSION['user_id']);
+        $currentPath = $_SERVER['REQUEST_URI'];
+        $activeTab = (strpos($currentPath, 'trang-ca-nhan') !== false) ? 'settings' : 'courses';
 
         return $this->view('frontend/client/profile', [
             'user' => $user,
             'myCourses' => $courses,
-            'title' => 'Trang cá nhân - ' . $user['name']
+            'title' => 'Trang cá nhân - ' . $user['name'],
+            'activeTab' => $activeTab
         ]);
     }
 

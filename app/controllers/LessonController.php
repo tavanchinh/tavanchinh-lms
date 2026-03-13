@@ -136,23 +136,31 @@ class LessonController extends BaseController {
     // app/controllers/LessonController.php
 
     public function adminStudy() {
-        // 1. Kiểm tra quyền Admin ở đây (nếu bạn có hệ thống phân quyền)
-        // if ($_SESSION['role'] !== 'admin') { die('Từ chối truy cập'); }
+        $search = $_GET['search'] ?? ''; // Lấy từ khóa tìm kiếm
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $perPage = 20;
+        $offset = ($page - 1) * $perPage;
 
         $lessonModel = new LessonModel();
-        $progressData = $lessonModel->getStudentProgress();
+        
+        // Truyền $search vào Model
+        $progressData = $lessonModel->getStudentProgressPaginated($perPage, $offset, $search);
+        $totalRecords = $lessonModel->countStudentProgress($search);
+        $totalPages = ceil($totalRecords / $perPage);
 
-        // 2. Tính toán % và định dạng dữ liệu
         foreach ($progressData as &$item) {
             $item['percent'] = ($item['total_lessons'] > 0) 
                 ? round(($item['completed_lessons'] / $item['total_lessons']) * 100) 
                 : 0;
         }
 
-        // 3. Trả về view admin (đảm bảo bạn đã tạo file view tương ứng)
         return $this->view('admin/lessons/study_progress', [
             'progress' => $progressData,
-            'title' => 'Quản lý Tiến độ Học viên'
+            'title' => 'Quản lý Tiến độ Học viên',
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalRecords' => $totalRecords,
+            'search' => $search // Truyền ngược lại View để hiển thị trong ô input
         ]);
     }
 

@@ -33,6 +33,21 @@ body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: var(-
     color: var(--primary-color) !important;
 }
 
+.nav-link.active-custom {
+    color: var(--bs-primary) !important;
+    font-weight: 600;
+    position: relative;
+}
+.nav-link.active-custom::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 15%;
+    width: 70%;
+    height: 2px;
+    background: var(--bs-primary);
+}
+
 /* Nút đăng nhập tròn trịa */
 .btn-login {
     border: 2px solid var(--primary-color);
@@ -70,14 +85,21 @@ body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: var(-
 
 /* Course Card (Giữ lại CSS của bạn nhưng tối ưu shadow) */
 .course-card { 
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-    border: none;
+    transition: all 0.3s ease;
+    border: 1px solid #f1f5f9 !important;
     border-radius: 16px; 
     overflow: hidden; 
 }
 .course-card:hover { 
-    transform: translateY(-8px); 
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; 
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+.course-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Giới hạn tối đa 2 dòng */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 3rem; /* Đảm bảo các card luôn cao bằng nhau */
 }
 :root {
     --footer-bg: #0f172a;       /* Xanh đen sâu cực sang */
@@ -146,4 +168,50 @@ footer .bi {
 .payment-icons img:hover {
     filter: grayscale(0) brightness(1);
     opacity: 1;
+}
+/* CSS bổ sung để làm đẹp giao diện */
+.course-learning-card {
+    transition: all 0.3s ease;
+    border: 1px solid #f1f5f9 !important;
+}
+.course-learning-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+.progress {
+    background-color: #f1f5f9;
+    border-radius: 20px;
+}
+.progress-bar {
+    border-radius: 20px;
+}
+.custom-nav-tabs .list-group-item.active {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    font-weight: 600;
+}
+.opacity-hover {
+    transition: opacity 0.3s ease;
+    background: rgba(0,0,0,0.3) !important;
+}
+.course-learning-card:hover .opacity-hover {
+    opacity: 1 !important;
+}
+
+
+
+@media (max-width: 991.98px) {
+    .list-group-horizontal-mobile {
+        flex-direction: row !important;
+        overflow-x: auto;
+        display: flex;
+        white-space: nowrap;
+        margin-bottom: 1.5rem;
+    }
+    .list-group-horizontal-mobile .list-group-item {
+        margin-right: 10px;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 20px !important;
+    }
+    .sticky-lg-top { position: static !important; }
 }

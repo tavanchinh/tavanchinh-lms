@@ -67,4 +67,65 @@ class AuthController extends BaseController {
         header("Location: /dang-nhap");
         exit;
     }
+
+    // Hiển thị trang Đăng ký
+    public function register() {
+        $this->view('auth/register');
+    }
+
+    public function registerProcess() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // CỰC KỲ QUAN TRỌNG: Xóa mọi nội dung đã echo trước đó (nếu có)
+            ob_clean(); 
+            header('Content-Type: application/json');
+
+            $userModel = new UserModel();
+            // Định nghĩa các biến rõ ràng từ đầu
+            $name = trim($_POST['name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+
+            // 2. Định nghĩa biến $userData (Đảm bảo biến này tồn tại trước khi dùng)
+            $userData = [
+                'name' => $name,
+                'email' => $email,
+                'phone_number' => trim($_POST['phone_number']) ?? '',
+                'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+                'role' => 'student',
+                'registered_at' => date('Y-m-d H:i:s')
+            ];
+
+            // 1. Kiểm tra email tồn tại
+            if ($userModel->checkEmailExists($email)) {
+                // SAI: $this->view('auth/register', [...]); 
+                // ĐÚNG:
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Email này đã được đăng ký! Vui lòng dùng email khác.'
+                ]);
+                exit; // Dừng ngay lập tức
+            }
+
+            // ... (phần code lưu database giữ nguyên) ...
+            
+            $userId = $userModel->registerStudent($userData);
+
+            if ($userId && is_numeric($userId)) {
+                $_SESSION['user_id'] = $userId;
+                $_SESSION['user_name'] = $name;
+                $_SESSION['user_role'] = 'student';
+                // ... set session ...
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Chào mừng bạn đến với hệ thống!',
+                    'redirect' => $_POST['back_url'] ?? '/'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Lỗi hệ thống khi tạo tài khoản.'
+                ]);
+            }
+            exit;
+        }
+    }
 }

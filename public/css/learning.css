@@ -352,6 +352,26 @@ body {
 	margin-right: 0 !important;
 	flex: none;
 }
+.custom-tabs .nav-link {
+	color: #64748b;
+	border-radius: 12px;
+	padding: 12px;
+	transition: all 0.3s ease;
+}
+.custom-tabs .nav-link.active {
+	background-color: #0d6efd !important;
+	color: #fff !important;
+	box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+.active-lesson {
+	border-left: 4px solid #0d6efd !important;
+}
+.transition { transition: 0.3s; }
+.hover-shadow-sm:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+.video-js {
+	width: 100%;
+	border-radius: 0;
+}
 
 
 /* ===== CỘT PHẢI (SIDEBAR) ===== */
@@ -456,6 +476,40 @@ body {
 		position: static;
 		max-height: none;
 	}
+	.container {
+        display: flex;
+        flex-direction: column; /* Ép các phần tử xếp thành hàng dọc */
+        padding: 0; /* Tối ưu không gian viền trên mobile */
+    }
+
+    .video-section {
+        width: 100%; /* Video chiếm hết chiều ngang */
+        position: relative;
+        z-index: 1;
+    }
+
+    .playlist-sidebar {
+        width: 100%; /* Sidebar chiếm hết chiều ngang */
+        margin-top: 20px; /* Tạo khoảng cách với phần thông tin video */
+        position: static; /* Hủy bỏ các thuộc tính fixed hoặc absolute nếu có */
+        max-height: none; /* Cho phép sidebar giãn theo nội dung bài học */
+    }
+
+    .video-player-container {
+        border-radius: 0; /* Xóa bo góc để video sát mép màn hình (tùy chọn) */
+    }
+}
+
+@media (max-width: 768px) {
+    .custom-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        white-space: nowrap;
+        display: flex;
+    }
+    .custom-tabs .nav-item {
+        flex: 0 0 auto;
+    }
 }
 
 /* Trong file CSS hoặc thẻ <style> */

@@ -17,16 +17,87 @@
         
         <div class="video-info">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h1 class="fw-bold h4 mb-0" id="current-lesson-title">Bài 1: Giới thiệu cấu trúc MVC trong PHP</h1>
+                <h1 class="fw-bold h4 mb-0" id="current-lesson-title"><?= htmlspecialchars($firstLesson['name'] ?? 'Bài học chưa được xác định') ?></h1>
                 <span id="finish-badge" class="badge bg-secondary d-none">Đã hoàn thành</span>
             </div>
             <hr>
-            <div class="lesson-content">
-                <h5 class="fw-bold mb-3">Nội dung bài học</h5>
-                <div style="line-height: 2;">
-                    <p>Mô hình MVC (Model-View-Controller) giúp tách biệt logic nghiệp vụ khỏi giao diện người dùng...</p>
-                    <div style="height: 600px; background: #f8f9fa; border-radius: 12px; padding: 20px; border: 1px dashed #ccc;" class="mt-4 text-center">
-                        Nội dung bài học chi tiết...
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-3">
+                    <ul class="nav nav-pills nav-fill custom-tabs" id="lessonTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active fw-bold" data-bs-toggle="tab" href="#tab-overview">
+                                <i class="bi bi-info-circle me-2"></i>Tổng quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-docs">
+                                <i class="bi bi-cloud-arrow-down me-2"></i>Tài liệu <span class="badge bg-danger ms-1">Mới</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-qa">
+                                <i class="bi bi-chat-dots me-2"></i>Hỏi đáp
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-4">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="tab-overview">
+                            <h6 class="fw-bold text-dark">Nội dung chính bài học:</h6>
+                            <p class="text-muted" style="line-height: 1.8;">
+                                <?= nl2br(htmlspecialchars($course['summary'] ?? 'Chào mừng bạn đến với bài giảng của Tạ Văn Chinh. Trong bài này chúng ta sẽ đi sâu vào thực hành quy trình ra file CNC thực tế.')) ?>
+                            </p>
+                            <hr class="opacity-10">
+                            <div class="bg-primary-subtle p-3 rounded-3 d-flex align-items-center">
+                                <i class="bi bi-lightbulb text-primary fs-4 me-3"></i>
+                                <small class="text-primary-emphasis">Mẹo: Bạn nên vừa xem video vừa mở phần mềm SketchUp để thực hành song song các thao tác trên bài giảng.</small>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-docs">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between hover-shadow-sm transition">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark-zip fs-3 text-warning me-3"></i>
+                                            <div>
+                                                <div class="fw-bold small">File mẫu thực hành.zip</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">Dung lượng: 12.5 MB</div>
+                                            </div>
+                                        </div>
+                                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-download"></i></a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark-pdf fs-3 text-danger me-3"></i>
+                                            <div>
+                                                <div class="fw-bold small">Thông số dao cụ CNC.pdf</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">Dung lượng: 1.2 MB</div>
+                                            </div>
+                                        </div>
+                                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-download"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-qa">
+                            <form action="/learning/comment" method="POST" class="mb-4">
+                                <textarea name="content" class="form-control rounded-4 border-light-subtle bg-light mb-2" rows="3" placeholder="Bạn gặp vướng mắc ở thao tác nào trong bài này?"></textarea>
+                                <button type="submit" class="btn btn-primary rounded-pill px-4 btn-sm fw-bold">Gửi câu hỏi</button>
+                            </form>
+                            
+                            <div class="d-flex gap-3 mb-3 pb-3 border-bottom border-light">
+                                <img src="https://ui-avatars.com/api/?name=Hoc+Vien&background=random" class="rounded-circle" width="40" height="40">
+                                <div>
+                                    <div class="fw-bold small">Nguyễn Văn An <span class="text-muted fw-normal ms-2 small">2 giờ trước</span></div>
+                                    <div class="small text-secondary mt-1">Thầy cho em hỏi bài này mình dùng dao mấy mm để phá thô ạ?</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -35,14 +106,26 @@
 
     <div class="playlist-sidebar">
         <div class="playlist-header">
+            <div class="course-progress-container mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small class="fw-bold">Tiến độ học tập</small>
+                    <small class="text-primary fw-bold"><?= $progressPercent ?>%</small>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                        role="progressbar" 
+                        style="width: <?= $progressPercent ?>%" 
+                        aria-valuenow="<?= $progressPercent ?>" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100">
+                    </div>
+                </div>
+                <p class="text-muted mt-1" style="font-size: 11px;">
+                    Đã hoàn thành <?= count($completedLessonIds) ?> / <?= $totalLessons ?> bài giảng
+                </p>
+            </div>
             <h6 class="mb-2 fw-bold">Nội dung khóa học</h6>
-            <div class="progress rounded-pill" style="height: 6px;">
-                <div id="course-progress" class="progress-bar bg-primary progress-bar-striped progress-bar-animated" style="width: 20%"></div>
-            </div>
-            <div class="d-flex justify-content-between mt-2">
-                <small class="text-muted" style="font-size: 11px;">Tiến độ bài học</small>
-                <small id="progress-text" class="text-primary fw-bold" style="font-size: 11px;">20%</small>
-            </div>
+            
         </div>
         <div class="playlist-body" id="playlist-body">
             <?php if (!empty($chapters)): ?>

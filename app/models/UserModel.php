@@ -118,10 +118,11 @@ class UserModel extends Database {
 
 
     public function create($data) {
-        $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO users (name, email, phone_number, password, role) VALUES (?, ?, ?, ?, ?)";
         return $this->query($sql, [
             $data['name'], 
             $data['email'], 
+            $data['phone_number'] ?? null,
             password_hash($data['password'], PASSWORD_DEFAULT),
             $data['role']
         ]);
@@ -129,7 +130,7 @@ class UserModel extends Database {
 
     /**
      * Tạo tài khoản học viên mới
-     * @param array $data Mảng chứa name, email, phone, password
+     * @param array $data Mảng chứa name, email, phone_number, password
      * @return bool Trả về true nếu thành công
      */
     public function createStudent($data) {
@@ -146,11 +147,28 @@ class UserModel extends Database {
         ]);
     }
 
+    public function registerStudent($data) {
+        $data['registered_at'] = date('Y-m-d H:i:s'); // Thêm trường registered_at vào mảng dữ liệu
+        $data['role'] = 'student'; // Đảm bảo role luôn là student khi đăng ký  
+        try {
+            $sql = "INSERT INTO users (name, email, phone_number, password, role, registered_at) 
+                    VALUES (:name, :email, :phone_number, :password, :role, :registered_at)";
+            
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute($data);
+
+            // ĐÚNG: Trả về ID của bản ghi vừa chèn
+            return $this->db->lastInsertId(); 
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
 
     public function createStudentAndGetId($data) {
         // 1. Chuẩn bị câu lệnh SQL (Lưu ý các tên cột phải khớp với DB của bạn)
-        $sql = "INSERT INTO users (name, email, phone_number, password, role, created_at) 
-                VALUES (:name, :email, :phone, :pass, :role, NOW())";
+        $sql = "INSERT INTO users (name, email, phone_number, password, role, created_at, registered_at) 
+                VALUES (:name, :email, :phone, :pass, :role, NOW(), NOW())";
         
         try {
             $stmt = $this->db->prepare($sql);
@@ -187,12 +205,12 @@ class UserModel extends Database {
         // Kiểm tra xem có cập nhật mật khẩu mới không
         if (!empty($data['password'])) {
             // Đổi phone -> phone_number
-            $sql = "UPDATE users SET name = ?, email = ?, phone_number = ?, password = ? WHERE id = ?";
-            $params = [$data['name'], $data['email'], $data['phone'], $data['password'], $id];
+            $sql = "UPDATE users SET name = ?, email = ?, phone_number = ?, password = ?, role = ? WHERE id = ?";
+            $params = [$data['name'], $data['email'], $data['phone'], $data['password'], $data['role'], $id];
         } else {
             // Đổi phone -> phone_number
-            $sql = "UPDATE users SET name = ?, email = ?, phone_number = ? WHERE id = ?";
-            $params = [$data['name'], $data['email'], $data['phone'], $id];
+            $sql = "UPDATE users SET name = ?, email = ?, phone_number = ?, role = ? WHERE id = ?";
+            $params = [$data['name'], $data['email'], $data['phone'], $data['role'], $id];
         }
 
         $stmt = $this->db->prepare($sql);

@@ -12,8 +12,11 @@ $router = new Router();
 // ==========================================
 $router->add('/', 'AuthController@showLogin');
 $router->add('dang-nhap', 'AuthController@showLogin');
+$router->add('dang-ky', 'AuthController@register');
+$router->add('register-process', 'AuthController@registerProcess');
 $router->add('login-process', 'AuthController@login');
 $router->add('dang-xuat', 'AuthController@logout');
+
 
 // ==========================================
 // 2. ADMIN DASHBOARD & HỌC VIÊN

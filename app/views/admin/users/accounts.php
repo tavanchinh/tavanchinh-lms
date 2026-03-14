@@ -192,7 +192,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="/admin/students/store" method="POST">
+                <form id="addStudentForm" action="/admin/students/store" method="POST">
+                    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Loại tài khoản <span class="text-danger">*</span></label>
+                        <select name="role" class="form-select py-2">
+                            <option value="student" selected>Học viên (Student)</option>
+                            <option value="staff">Nhân viên (Staff)</option>
+                            <option value="admin">Quản trị viên (Admin)</option>
+                        </select>
+                    </div>
+                    <?php else: ?>
+                        <input type="hidden" name="role" value="student">
+                    <?php endif; ?>   
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Họ và tên <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control py-2" placeholder="Nhập họ tên" required>
@@ -252,6 +265,16 @@
                     <input type="hidden" name="id" id="edit_s_id">
                     <div class="row">
                         <div class="col-md-6">
+                            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Loại tài khoản <span class="text-danger">*</span></label>
+                                <select name="role" id="edit_s_role" class="form-select py-2">
+                                    <option value="student">Học viên (Student)</option>
+                                    <option value="staff">Nhân viên (Staff)</option>
+                                    <option value="admin">Quản trị viên (Admin)</option>
+                                </select>
+                            </div>
+                            <?php endif; ?> 
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Họ và tên</label>
                                 <input type="text" name="name" id="edit_s_name" class="form-control py-2" required>
@@ -300,6 +323,48 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+
+    // --- XỬ LÝ TẠO MỚI HỌC VIÊN ---
+    document.getElementById('addStudentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        // Hiệu ứng Loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+        fetch('/admin/students/store', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(); // Load lại trang để hiện học viên mới
+                });
+            } else {
+                Swal.fire('Lỗi!', data.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Tạo mới';
+            }
+        })
+        .catch(error => {
+            Swal.fire('Lỗi!', 'Không thể kết nối máy chủ', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Tạo mới';
+        });
+    });
+
     function toggleCourse(element, courseId) {
         // Tìm checkbox ẩn bên trong phần tử vừa click
         const checkbox = element.querySelector('input[type="checkbox"]');
@@ -321,6 +386,12 @@
         document.getElementById('edit_s_name').value = user.name;
         document.getElementById('edit_s_email').value = user.email;
         document.getElementById('edit_s_phone').value = user.phone_number;
+
+        // Gán vai trò hiện tại vào select (nếu thẻ này tồn tại - trường hợp là admin)
+        const roleSelect = document.getElementById('edit_s_role');
+        if (roleSelect) {
+            roleSelect.value = user.role;
+        }
 
         // Reset tất cả thẻ khóa học về trạng thái chưa chọn
         const cards = document.querySelectorAll('#edit_course_list .course-card-item');
@@ -346,22 +417,62 @@
         modal.show();
     }
 
-    // 2. Hàm gửi dữ liệu cập nhật
     function submitEditStudent() {
         const form = document.getElementById('formEditStudent');
         const formData = new FormData(form);
+        
+        // 1. Hiển thị thông báo đang xử lý
+        Swal.fire({
+            title: 'Đang xử lý...',
+            text: 'Vui lòng chờ trong giây lát',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
+        // 2. Gửi yêu cầu AJAX
         fetch('/admin/students/update-ajax', {
             method: 'POST',
-            body: new URLSearchParams(formData)
+            // Lưu ý: Dùng body: formData sẽ tốt hơn nếu bạn có ý định upload ảnh sau này
+            // Ở đây tôi giữ URLSearchParams theo ý bạn hoặc chuyển sang FormData đều được
+            body: new URLSearchParams(formData),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                location.reload();
+                // 3. Thông báo thành công
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Thông tin tài khoản đã được cập nhật.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(); // Load lại trang để cập nhật bảng dữ liệu
+                });
             } else {
-                alert('Lỗi: ' + data.message);
+                // 4. Thông báo lỗi từ server (ví dụ trùng email)
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thất bại',
+                    text: data.message || 'Có lỗi xảy ra trong quá trình cập nhật.'
+                });
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi kết nối',
+                text: 'Không thể gửi dữ liệu đến máy chủ. Vui lòng thử lại.'
+            });
         });
     }
 

@@ -235,6 +235,29 @@ class CourseController extends BaseController {
 
         // 4. Lấy danh sách chương và bài học
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
+        // --- BẮT ĐẦU TÍNH TOÁN PHẦN TRĂM ---
+        $totalLessons = 0;
+        foreach ($chapters as $chapter) {
+            if (!empty($chapter['lessons'])) {
+                $totalLessons += count($chapter['lessons']);
+            }
+        }
+
+        $completedLessonIds = [];
+        $progressPercent = 0;
+
+        if ($userId) {
+            $completedLessonIds = $lessonModel->getCompletedLessonIds($userId, $course['id']);
+            $completedCount = count($completedLessonIds);
+            
+            // Tránh lỗi chia cho 0 nếu khóa học chưa có bài nào
+            if ($totalLessons > 0) {
+                $progressPercent = round(($completedCount / $totalLessons) * 100);
+            }
+        }
+        // --- KẾT THÚC TÍNH TOÁN ---
+
+        
 
         $firstLesson = null;
         if (!empty($chapters)) {
@@ -269,7 +292,9 @@ class CourseController extends BaseController {
             'isOwned'  => $isOwned,
             'isTrial'  => !$isOwned, // Nếu chưa mua thì mặc định là đang ở chế độ học thử
             'firstLesson' => $firstLesson,
-            'completedLessonIds' => $completedLessonIds
+            'completedLessonIds' => $completedLessonIds,
+            'progressPercent'    => $progressPercent, // Trả dữ liệu về View
+            'totalLessons'       => $totalLessons
         ]);
     }
 

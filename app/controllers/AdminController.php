@@ -95,41 +95,46 @@ class AdminController extends BaseController {
      * Lưu học viên mới
      */
     public function storeStudent() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $userModel = new UserModel();
-            $courseModel = new CourseModel();
+        // Chỉ xử lý POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Yêu cầu không hợp lệ']);
+            exit;
+        }
 
-            // 1. Kiểm tra email
-            if ($userModel->checkEmailExists($_POST['email'])) {
-                header("Location: /admin/students?error=email_exists");
-                exit();
-            }
+        $userModel = new UserModel();
+        $courseModel = new CourseModel();
+        header('Content-Type: application/json'); // Đảm bảo trình duyệt hiểu đây là JSON
 
-            // 2. Tạo dữ liệu học viên
-            $userData = [
-                'name'     => $_POST['name'],
-                'email'    => $_POST['email'],
-                'phone_number'    => $_POST['phone_number'],
-                'password' => password_hash($_POST['password'], PASSWORD_DEFAULT)
-            ];
-
-            // 3. Lưu học viên và lấy ID vừa tạo
-            $studentId = $userModel->createStudentAndGetId($userData);
-
-            if ($studentId) {
-                // 4. Xử lý gán nhiều khóa học (nếu có chọn)
-                if (!empty($_POST['course_ids'])) {
-                    foreach ($_POST['course_ids'] as $courseId) {
-                        // Gọi hàm gán khóa học sẵn có của bạn
-                        $courseModel->assignUserToCourse($studentId, $courseId);
-                    }
-                }
-                header("Location: /admin/accounts?success=1");
-            } else {
-                header("Location: /admin/accounts?error=system");
-            }
+        // 1. Kiểm tra email
+        if ($userModel->checkEmailExists($_POST['email'])) {
+            echo json_encode(['success' => false, 'message' => 'Email này đã được sử dụng!']);
             exit();
         }
+
+        // 2. Tạo dữ liệu học viên
+        $userData = [
+            'name'         => $_POST['name'],
+            'email'        => $_POST['email'],
+            'phone_number' => $_POST['phone_number'],
+            'role'         => $_POST['role'] ?? 'student', // Mặc định là student nếu không có
+            'password'     => password_hash($_POST['password'], PASSWORD_DEFAULT)
+        ];
+
+        // 3. Lưu học viên
+        $studentId = $userModel->createStudentAndGetId($userData);
+
+        if ($studentId) {
+            // 4. Gán khóa học
+            if (!empty($_POST['course_ids'])) {
+                foreach ($_POST['course_ids'] as $courseId) {
+                    $courseModel->assignUserToCourse($studentId, $courseId);
+                }
+            }
+            echo json_encode(['success' => true, 'message' => 'Đã thêm học viên và gán khóa học thành công!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống, không thể lưu dữ liệu.']);
+        }
+        exit();
     }
 
 
@@ -152,6 +157,11 @@ class AdminController extends BaseController {
             'email' => $_POST['email'],
             'phone' => $_POST['phone_number']
         ];
+
+        // Chỉ cập nhật role nếu người đang thực hiện là admin và có gửi role lên
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin' && isset($_POST['role'])) {
+            $userData['role'] = $_POST['role'];
+        }
 
         // Nếu người dùng nhập mật khẩu mới thì mới mã hóa và gửi đi
         if (!empty($_POST['password'])) {

@@ -15,23 +15,13 @@
                 </div>
             </div>
 
-            <div class="col-lg-2 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <h6 class="text-uppercase fw-bold">Khóa học</h6>
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="/tron-bo-quy-trinh-ra-file-cnc-voi-sketchup-abf-va-aspire">Trọn bộ quy trình ra file</a></li>
                     <li class="mb-2"><a href="/ky-nang-abf-va-aspire">Kỹ năng ABF & Aspire</a></li>
                     <li class="mb-2"><a href="/ky-nang-aspire">Kỹ năng Aspire độc lập</a></li>
                     <li class="mb-2"><a href="/dung-hinh-noi-that-co-ban-voi-sketchup">Dựng hình nội thất cơ bản</a></li>
-                </ul>
-            </div>
-
-            <div class="col-lg-2 col-md-6">
-                <h6 class="text-uppercase fw-bold">Liên kết nhanh</h6>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#">Về chúng tôi</a></li>
-                    <li class="mb-2"><a href="#">Hướng dẫn mua hàng</a></li>
-                    <li class="mb-2"><a href="#">Chính sách bảo mật</a></li>
-                    <li class="mb-2"><a href="#">Hỏi đáp (FAQ)</a></li>
                 </ul>
             </div>
 

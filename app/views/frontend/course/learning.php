@@ -46,7 +46,7 @@
                         <div class="tab-pane fade show active" id="tab-overview">
                             <h6 class="fw-bold text-dark">Nội dung chính bài học:</h6>
                             <p class="text-muted" style="line-height: 1.8;">
-                                <?= nl2br(htmlspecialchars($course['summary'] ?? 'Chào mừng bạn đến với bài giảng của Tạ Văn Chinh. Trong bài này chúng ta sẽ đi sâu vào thực hành quy trình ra file CNC thực tế.')) ?>
+                                <?= nl2br($course['summary'] ?? 'Chào mừng bạn đến với bài giảng của Tạ Văn Chinh. Trong bài này chúng ta sẽ đi sâu vào thực hành quy trình ra file CNC thực tế.') ?>
                             </p>
                             <hr class="opacity-10">
                             <div class="bg-primary-subtle p-3 rounded-3 d-flex align-items-center">
@@ -55,34 +55,68 @@
                             </div>
                         </div>
 
-                        <div class="tab-pane fade" id="tab-docs">
+                        <div class="tab-pane fade" id="tab-docs" role="tabpanel">
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between hover-shadow-sm transition">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-file-earmark-zip fs-3 text-warning me-3"></i>
-                                            <div>
-                                                <div class="fw-bold small">File mẫu thực hành.zip</div>
-                                                <div class="text-muted" style="font-size: 0.7rem;">Dung lượng: 12.5 MB</div>
+                                <?php if (!empty($documents)): ?>
+                                    <?php foreach ($documents as $doc): ?>
+                                        <?php 
+                                            $fileExt = strtolower($doc['file_type']);
+                                            $icon = 'bi-file-earmark-arrow-down'; 
+                                            $colorClass = 'text-primary';
+
+                                            if (in_array($fileExt, ['zip', 'rar', '7z'])) {
+                                                $icon = 'bi-file-earmark-zip';
+                                                $colorClass = 'text-warning';
+                                            } elseif ($fileExt === 'pdf') {
+                                                $icon = 'bi-file-earmark-pdf';
+                                                $colorClass = 'text-danger';
+                                            } elseif (in_array($fileExt, ['xls', 'xlsx', 'csv'])) {
+                                                $icon = 'bi-file-earmark-excel';
+                                                $colorClass = 'text-success';
+                                            } elseif ($fileExt === 'skp') {
+                                                // LỰA CHỌN CHO SKETCHUP
+                                                $icon = 'bi-box'; // Icon hình hộp đại diện cho 3D
+                                                $colorClass = 'text-info'; // Màu xanh lơ hoặc màu đỏ đặc trưng của SketchUp
+                                            }
+                                        ?>
+                                        <div class="col-md-6">
+                                            <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between bg-white hover-shadow-sm transition">
+                                                <div class="d-flex align-items-center overflow-hidden">
+                                                    <i class="bi <?= $icon ?> fs-2 <?= $colorClass ?> me-3"></i>
+                                                    <div class="overflow-hidden">
+                                                        <div class="fw-bold small text-truncate" title="<?= htmlspecialchars($doc['file_name']) ?>">
+                                                            <?= htmlspecialchars($doc['file_name']) ?>
+                                                        </div>
+                                                        <div class="text-muted" style="font-size: 0.75rem;">
+                                                            Dung lượng: <?= $doc['file_size'] ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <a href="/<?= $doc['file_path'] ?>" 
+                                                download="<?= $doc['file_name'] ?>" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 ms-2">
+                                                    <i class="bi bi-download"></i> Tải về
+                                                </a>
                                             </div>
                                         </div>
-                                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-download"></i></a>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="col-12 text-center py-5">
+                                        <i class="bi bi-folder2-open display-4 text-muted"></i>
+                                        <p class="mt-2 text-muted small">Khóa học này chưa có tài liệu đính kèm.</p>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-file-earmark-pdf fs-3 text-danger me-3"></i>
-                                            <div>
-                                                <div class="fw-bold small">Thông số dao cụ CNC.pdf</div>
-                                                <div class="text-muted" style="font-size: 0.7rem;">Dung lượng: 1.2 MB</div>
-                                            </div>
-                                        </div>
-                                        <a href="#" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-download"></i></a>
-                                    </div>
-                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+
+                        <style>
+                            /* Hiệu ứng hover cho đẹp hơn trên laptop */
+                            .hover-shadow-sm { transition: 0.3s; }
+                            .hover-shadow-sm:hover { 
+                                box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; 
+                                border-color: #0d6efd!important;
+                            }
+                        </style>
 
                         <div class="tab-pane fade" id="tab-qa">
                             <form action="/learning/comment" method="POST" class="mb-4">

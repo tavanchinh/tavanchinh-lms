@@ -41,6 +41,7 @@ $router->add('admin/courses/create', 'CourseController@create');
 $router->add('admin/courses/store', 'CourseController@storeCourse');
 $router->add('admin/courses/edit/{id}', 'CourseController@edit');
 $router->add('admin/courses/update/{id}', 'CourseController@update');
+$router->add('admin/courses/delete-doc/{id}', 'CourseController@deleteDoc');
 
 // Gán khóa học cho học viên
 $router->add('assign-course', 'CourseController@showAssignForm');

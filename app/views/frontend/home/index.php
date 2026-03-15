@@ -3,13 +3,13 @@
 <main>
     <section class="hero-section py-5 mb-5" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 1px solid #e2e8f0;">
         <div class="container text-center py-5">
-            <h1 class="display-4 fw-bold text-dark mb-3">Học tập không giới hạn</h1>
-            <p class="lead text-muted mb-4 mx-auto" style="max-width: 600px;">Làm chủ quy trình thiết kế SketchUp và sản xuất CNC chuyên nghiệp cùng chuyên gia.</p>
+            <h1 class="display-4 fw-bold text-dark mb-3">Tham gia khóa học ngay hôm nay</h1>
+            <p class="lead text-muted mb-4 mx-auto" style="max-width: 600px;">Chủ động hơn trong việc vẽ và ra file CNC. Đồng hành trọn đời cùng đội ngũ chuyên nghiệp</p>
             <a href="#courses" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Khám phá khóa học</a>
         </div>
     </section>
 
-    <div class="container mb-5">
+    <div class="container mb-5" id="courses">
         <h3 class="fw-bold mb-4"><i class="bi bi-mortarboard me-2 text-primary"></i>Khóa học nổi bật</h3>
         <div class="row g-4">
             <?php if (!empty($courses)): ?>
@@ -51,9 +51,12 @@
             <div class="row g-4">
                 <?php 
                 $feedbacks = [
-                    ['name' => 'Nguyễn Văn A', 'job' => 'Web Developer', 'content' => 'Kiến thức rất thực tế, giúp tôi có thể đi làm ngay sau khi học.'],
-                    ['name' => 'Trần Thị B', 'job' => 'Sinh viên', 'content' => 'Giảng viên hỗ trợ nhiệt tình, bài giảng dễ hiểu ngay cả với người mới.'],
-                    ['name' => 'Lê Văn C', 'job' => 'Freelancer', 'content' => 'Nền tảng học rất mượt, video chất lượng cao, ID video load rất nhanh.'],
+                    ['name' => 'Cao Ngọc Hải', 'job' => 'Chủ xưởng', 'content' => 'Cảm ơn thầy Chinh đã đào tạo và tạo ra 1 sân chơi chung cho anh em trong nghề có thể kết nối giao lưu'],
+                    ['name' => 'Đức Nhật', 'job' => 'Chủ xưởng', 'content' => 'Mình tham gia khóa Aspire bên thầy Chinh nhưng thực sự được hỗ trợ rất nhiệt tình, được học thêm cả Corel'],
+                    ['name' => 'Xuân Ninh', 'job' => 'Chủ xưởng', 'content' => 'Cảm ơn thầy rất nhiều, mùa hè này hẹn thầy xuống Hải Phòng nhé thầy'],
+                    ['name' => 'Đức Hùng', 'job' => 'CTV Ra file', 'content' => 'Thầy Chinh dạy rất dễ hiểu, nhiệt tình hỗ trợ học viên. Mình đã học được rất nhiều kiến thức bổ ích từ thầy'],
+                    ['name' => 'Hữu Phước', 'job' => 'Chủ xưởng', 'content' => 'Khóa học của thầy Chinh rất thực tế, giúp mình nắm vững quy trình làm việc và áp dụng ngay vào xưởng của mình'],
+                    ['name' => 'Văn Hùng', 'job' => 'Chủ xưởng', 'content' => 'Mình đã tham gia khóa học của thầy Chinh và thực sự ấn tượng với cách thầy truyền đạt kiến thức một cách dễ hiểu và chi tiết']
                 ];
                 foreach ($feedbacks as $fb): ?>
                 <div class="col-md-4 text-start">

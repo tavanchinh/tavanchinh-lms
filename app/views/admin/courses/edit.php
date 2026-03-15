@@ -5,51 +5,136 @@
     <div style="flex: 6; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
         <h3 style="border-bottom: 2px solid #007bff; padding-bottom: 10px;">Cấu hình khóa học</h3>
         <form action="/admin/courses/update/<?= $course['id'] ?>" method="POST" enctype="multipart/form-data">
-            
-            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <label class="fw-bold" style="display: block; margin-bottom: 8px;">Ảnh đại diện</label>
-                    <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                        <img id="course_preview" 
-                             src="/uploads/<?= $course['image'] ?: 'default.jpg' ?>" 
-                             style="width: 100%; height: auto; min-height: 150px; object-fit: cover; display: block;">
-                        
-                        <label for="course_image" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+    
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="card-title mb-0 fw-bold text-primary"><i class="bi bi-info-circle-fill me-2"></i>Thông tin cơ bản</h6>
+            <span class="badge <?= $course['status'] == 1 ? 'bg-success' : 'bg-secondary' ?>">
+                <?= $course['status'] == 1 ? 'Đang hiển thị' : 'Đang ẩn' ?>
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Ảnh đại diện</label>
+                    <div class="position-relative rounded-3 overflow-hidden border bg-light" style="aspect-ratio: 16/9;">
+                        <img id="course_preview" src="/uploads/<?= $course['image'] ?: 'default.jpg' ?>" 
+                             class="w-100 h-100" style="object-fit: cover;">
+                        <label for="course_image" class="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-2 shadow">
                             <i class="bi bi-camera"></i> Thay đổi
                         </label>
                     </div>
                     <input type="file" name="image" id="course_image" hidden accept="image/*">
                 </div>
-
-                <div style="flex: 2;">
-                    <div style="margin-bottom: 15px;">
-                        <label class="fw-bold">Tên khóa học</label>
-                        <input type="text" name="name" value="<?= $course['name'] ?>" class="form-control">
+                
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên khóa học</label>
+                        <input type="text" name="name" value="<?= htmlspecialchars($course['name']) ?>" class="form-control form-control-lg border-primary-subtle" required>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <label class="fw-bold">Giá bán (VNĐ)</label>
-                        <input type="text" id="price_format" class="form-control" value="<?= number_format($course['price'], 0, ',', '.') ?>">
-                        <input type="hidden" name="price" id="price_raw" value="<?= $course['price'] ?>">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label class="form-label fw-bold">Vị trí hiển thị</label>
-                        <input type="number" name="position" class="form-control" value="<?= $course['position'] ?>">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Giá bán (VNĐ)</label>
+                            <div class="input-group input-group-lg">
+                                <input type="text" id="price_format" class="form-control fw-bold text-danger" value="<?= number_format($course['price'], 0, ',', '.') ?>">
+                                <span class="input-group-text text-danger fw-bold">₫</span>
+                            </div>
+                            <input type="hidden" name="price" id="price_raw" value="<?= $course['price'] ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Trạng thái</label>
+                            <select name="status" class="form-select form-select-lg">
+                                <option value="1" <?= $course['status'] == 1 ? 'selected' : '' ?>>✅ Hiển thị</option>
+                                <option value="0" <?= $course['status'] == 0 ? 'selected' : '' ?>>🚫 Tạm ẩn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Vị trí</label>
+                            <input type="number" name="position" class="form-control form-control-lg" value="<?= $course['position'] ?>">
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div style="margin-bottom: 15px;">
-                <label class="fw-bold">Tóm tắt khóa học (Summary)</label>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="card-title mb-0 fw-bold text-primary"><i class="bi bi-pencil-square me-2"></i>Nội dung bài giảng</h6>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <label class="form-label fw-bold">Tóm tắt ngắn (Summary)</label>
                 <textarea name="summary" id="editor_summary" class="form-control"><?= $course['summary'] ?? '' ?></textarea>
             </div>
-
-            <div style="margin-bottom: 15px;">
-                <label class="fw-bold">Mô tả chi tiết (Description)</label>
+            <div class="mb-0">
+                <label class="form-label fw-bold">Mô tả chi tiết (Description)</label>
                 <textarea name="description" id="editor_description" class="form-control"><?= $course['description'] ?? '' ?></textarea>
             </div>
-            
-            <button type="submit" class="btn btn-success w-100">Cập nhật chung</button>
-        </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="card-title mb-0 fw-bold text-primary"><i class="bi bi-paperclip me-2"></i>Tài liệu đính kèm</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 border-end">
+                    <label class="form-label fw-bold">Thêm tài liệu mới</label>
+                    <input type="file" name="documents[]" class="form-control mb-2" multiple>
+                    <small class="text-muted italic">Bạn có thể chọn nhiều file cùng lúc (.zip, .pdf, .rar, .xlsx)</small>
+                </div>
+                <div class="col-md-6 ps-md-4">
+                    <label class="form-label fw-bold">Danh sách tài liệu hiện có</label>
+                    <div class="list-group list-group-flush border rounded">
+                        <?php if (!empty($documents)): ?>
+                            <?php foreach ($documents as $doc): ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-2" id="doc-item-<?= $doc['id'] ?>">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-earmark-arrow-down text-primary me-2"></i>
+                                        <span class="small fw-bold text-truncate" style="max-width: 250px;"><?= $doc['id'] ?> - <?= $doc['file_name'] ?></span>
+                                        <span class="badge bg-light text-dark ms-2" style="font-size: 0.65rem;"><?= $doc['file_size'] ?></span>
+                                    </div>
+                                    <button type="button" class="btn btn-link text-danger p-0 btn-delete-doc" data-id="<?= $doc['id'] ?>" data-name="<?= $doc['file_name'] ?>">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="p-3 text-center text-muted small">Chưa có tài liệu đính kèm</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sticky-bottom bg-white border-top p-3 shadow-lg d-flex justify-content-end gap-3 rounded-top">
+        <a href="/admin/courses" class="btn btn-light border px-4">Quay lại</a>
+        <button type="submit" class="btn btn-success px-5 fw-bold">
+            <i class="bi bi-save me-2"></i> CẬP NHẬT KHÓA HỌC
+        </button>
+    </div>
+
+</form>
+
+<style>
+    /* Laptop 14 inch tối ưu CKEditor */
+    .ck-editor__editable { 
+        min-height: 300px !important; 
+        max-height: 600px;
+    }
+    /* Đảm bảo sticky bottom không che khuất nội dung cuối cùng */
+    body { padding-bottom: 80px; }
+    .sticky-bottom { 
+        position: fixed; 
+        bottom: 0; 
+        left: 260px; /* Thay đổi theo chiều rộng sidebar admin của bạn */
+        right: 0; 
+        z-index: 1000; 
+    }
+</style>
 
         <hr>
         <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#addChapterModal">
@@ -59,9 +144,9 @@
 
     <div style="flex: 4; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">Nội dung bài học</h3>
+            <h3 style="margin: 0;">Bài học</h3>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLessonModal">
-                <i class="bi bi-plus-circle"></i> + Thêm
+                <i class="bi bi-plus-circle"></i> Thêm
             </button>
         </div>
 
@@ -261,6 +346,7 @@
 </div>
 
 <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
 <script>
     // CKEditor
     ClassicEditor.create(document.querySelector('#editor_summary'), {
@@ -268,7 +354,7 @@
     }).catch(error => { console.error(error); });
 
     ClassicEditor.create(document.querySelector('#editor_description'), {
-        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'insertTable', 'blockQuote', 'undo', 'redo']
+        toolbar: ['heading', '|', 'bold', 'italic', 'link','imageUpload','mediaEmbed', 'bulletedList', 'numberedList', 'insertTable', 'blockQuote', 'undo', 'redo']
     }).catch(error => { console.error(error); });
 
     // Preview Image
@@ -345,6 +431,45 @@
             else alert('Lỗi: ' + data.message);
         });
     }
+    document.querySelectorAll('.btn-delete-doc').forEach(button => {
+        button.addEventListener('click', function() {
+            const docId = this.getAttribute('data-id');
+            const fileName = this.getAttribute('data-name');
+
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: `Bạn có chắc chắn muốn xóa tài liệu: ${fileName}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6e7881',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Gửi yêu cầu xóa qua AJAX (Fetch API)
+                    fetch(`/admin/courses/delete-doc/${docId}`, {
+                        method: 'POST', // Hoặc GET tùy theo route của bạn
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Đã xóa!', 'Tài liệu đã được gỡ bỏ thành công.', 'success');
+                            // Xóa dòng tài liệu khỏi giao diện mà không load lại trang
+                            const item = document.getElementById(`doc-item-${docId}`);
+                            if (item) item.remove();
+                        } else {
+                            Swal.fire('Lỗi!', data.message || 'Không thể xóa tài liệu này.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Lỗi kết nối!', 'Không thể gửi yêu cầu đến máy chủ.', 'error');
+                    });
+                }
+            });
+        });
+    });
 </script>
 
 <style>

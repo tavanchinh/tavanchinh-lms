@@ -285,4 +285,30 @@ class LessonModel extends Database {
         $result = $this->query($sql, [$searchKey, $searchKey, $searchKey])->fetch(PDO::FETCH_ASSOC);
         return $result['total'] ?? 0;
     }
+
+    
+
+    /**
+     * Lấy tổng số bài học của 1 khóa học
+     */
+    public function getTotalLessonsByCourseId($courseId) {
+        $sql = "SELECT COUNT(id) as total FROM lessons WHERE course_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$courseId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($result['total'] ?? 0);
+    }
+
+    /**
+     * Lấy số lượng bài đã hoàn thành của 1 user trong 1 khóa học
+     */
+    public function getCompletedCount($userId, $courseId) {
+        // Dựa trên bảng user_lessons bạn đang dùng ở các hàm khác
+        $sql = "SELECT COUNT(lesson_id) as total FROM user_lessons 
+                WHERE user_id = ? AND course_id = ? AND is_completed = 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId, $courseId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($result['total'] ?? 0);
+    }
 }

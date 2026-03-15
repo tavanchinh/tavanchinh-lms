@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập | Tạ Văn Chinh CMS</title>
+    <title>Đăng nhập tài khoản</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #f0f2f5; height: 100vh; display: flex; align-items: center; }
-        .login-card { border: none; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 1000px; width: 100%; margin: auto; }
+        .login-card { border: none; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 1000px; width: 100%; margin: 8rem auto 2rem auto;}
         .login-side-image { background: linear-gradient(135deg, #0d6efd 0%, #003d99 100%); color: white; display: flex; flex-direction: column; justify-content: center; padding: 3rem; }
         .form-section { background: white; padding: 3.5rem; }
         .form-control { padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid #dee2e6; }
@@ -59,7 +59,7 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <label class="form-label small fw-bold">Mật khẩu</label>
-                        <a href="/forgot-password" class="small text-decoration-none">Quên mật khẩu?</a>
+                        <a href="/#" class="small text-decoration-none">Quên mật khẩu?</a>
                     </div>
                     <input type="password" name="password" class="form-control" value="<?= $saved_pass ?>" placeholder="••••••••" required>
                 </div>

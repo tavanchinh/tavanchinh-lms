@@ -3,25 +3,25 @@
         <div class="row g-4">
             <div class="col-lg-4 col-md-6">
                 <h5 class="fw-bold text-uppercase tracking-wider">
-                    <span style="color: var(--accent-color);">TAVANCHINH</span>.EDU
+                    <span style="color: var(--accent-color);">CHINH</span>.EDU.VN
                 </h5>
                 <p class="mb-4">
-                    Nền tảng đào tạo SketchUp, ABF và Aspire thực chiến. Chúng tôi giúp bạn rút ngắn thời gian thiết kế và làm chủ quy trình sản xuất CNC chuyên nghiệp.
+                    Nền tảng đào tạo SketchUp, ABF và Aspire thực chiến. Đồng hành trọn đời cùng anh em học viên, giúp anh em làm chủ quy trình và yên tâm sản xuất.
                 </p>
                 <div class="social-icons">
-                    <a href="#"><i class="bi bi-facebook"></i></a>
-                    <a href="#"><i class="bi bi-youtube"></i></a>
-                    <a href="#"><i class="bi bi-messenger"></i></a>
+                    <a href="https://www.facebook.com/tavanchinh.cnc/"><i class="bi bi-facebook"></i></a>
+                    <a href="https://www.youtube.com/@tavanchinh"><i class="bi bi-youtube"></i></a>
+                    <a href="https://m.me/tavanchinh.cnc"><i class="bi bi-messenger"></i></a>
                 </div>
             </div>
 
             <div class="col-lg-2 col-md-6">
                 <h6 class="text-uppercase fw-bold">Khóa học</h6>
                 <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#">SketchUp Nội thất</a></li>
-                    <li class="mb-2"><a href="#">ABF Cutting Pro</a></li>
-                    <li class="mb-2"><a href="#">Aspire CNC 2D/3D</a></li>
-                    <li class="mb-2"><a href="#">V-Ray cho Kiến trúc</a></li>
+                    <li class="mb-2"><a href="/tron-bo-quy-trinh-ra-file-cnc-voi-sketchup-abf-va-aspire">Trọn bộ quy trình ra file</a></li>
+                    <li class="mb-2"><a href="/ky-nang-abf-va-aspire">Kỹ năng ABF & Aspire</a></li>
+                    <li class="mb-2"><a href="/ky-nang-aspire">Kỹ năng Aspire độc lập</a></li>
+                    <li class="mb-2"><a href="/dung-hinh-noi-that-co-ban-voi-sketchup">Dựng hình nội thất cơ bản</a></li>
                 </ul>
             </div>
 
@@ -40,19 +40,19 @@
                 <ul class="list-unstyled">
                     <li class="d-flex mb-3">
                         <i class="bi bi-geo-alt-fill me-3"></i>
-                        <span>Thạch Thất, Hà Nội, Việt Nam</span>
+                        <span>SN 17 Đường Cần Kiệm, Thạch Thất, Hà Nội</span>
                     </li>
                     <li class="d-flex mb-3">
                         <i class="bi bi-envelope-fill me-3"></i>
-                        <span>contact@tavanchinh.com</span>
+                        <span>chinh.tv91@gmail.com</span>
                     </li>
                     <li class="d-flex mb-3">
                         <i class="bi bi-telephone-fill me-3"></i>
-                        <span>+84 123 456 789</span>
+                        <span>0972 808 368</span>
                     </li>
                     <li class="d-flex mb-3">
                         <i class="bi bi-clock-fill me-3"></i>
-                        <span>08:00 - 21:00 (Thứ 2 - Thứ 7)</span>
+                        <span>08:00 - 22:00 (Thứ 2 - Thứ 7)</span>
                     </li>
                 </ul>
             </div>

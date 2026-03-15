@@ -149,7 +149,7 @@ public function updateCourse($id, $data) {
      * Lấy danh sách đầy đủ thông tin các khóa học học viên ĐÃ tham gia
      */
     public function getUserEnrolledCourses($userId) {
-        $sql = "SELECT c.* FROM courses c JOIN user_courses uc ON c.id = uc.course_id WHERE uc.user_id = ?";
+        $sql = "SELECT DISTINCT c.* FROM courses c JOIN user_courses uc ON c.id = uc.course_id WHERE uc.user_id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId]);
         // Trả về mảng phẳng chỉ chứa ID: [1, 4, 7]

@@ -71,13 +71,19 @@
                                                 
                                                 <div class="d-flex align-items-center gap-3">
                                                     <div class="progress flex-grow-1" style="height: 10px;">
-                                                        <?php $prog = $course['progress'] ?? 0; ?>
-                                                        <div class="progress-bar bg-success shadow-sm" role="progressbar" 
-                                                             style="width: <?= $prog ?>%" 
-                                                             aria-valuenow="<?= $prog ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                                        <div class="progress-bar bg-success shadow-sm" 
+                                                            role="progressbar" 
+                                                            style="width: <?= $course['progress_percent'] ?>%" 
+                                                            aria-valuenow="<?= $course['progress_percent'] ?>" 
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100">
+                                                        </div>
                                                     </div>
-                                                    <span class="fw-bold small text-success"><?= $prog ?>%</span>
+                                                    <span class="fw-bold small text-success">
+                                                        <?= $course['progress_percent'] ?>%
+                                                    </span>
                                                 </div>
+                                                
                                             </div>
                                         </div>
                                     </div>

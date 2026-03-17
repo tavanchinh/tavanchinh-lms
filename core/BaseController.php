@@ -10,7 +10,9 @@ class BaseController {
 
     // Hàm gọi View kèm theo dữ liệu
     protected function view($viewName, $data = []) {
+        $data['currentUser'] = $this->getGlobalUser();
         extract($data); // Chuyển array ['user' => 'admin'] thành biến $user
+        
         $viewPath = "../app/views/" . $viewName . ".php";
         
         if (file_exists($viewPath)) {
@@ -54,6 +56,30 @@ class BaseController {
         if (!in_array($_SESSION['user_role'], $roles)) {
             die("Bạn không có quyền truy cập khu vực này!");
         }
+    }
+
+    // Hàm bổ trợ để lấy user cho toàn hệ thống
+    private function getGlobalUser() {
+        if (isset($_SESSION['user_id'])) {
+            return $_SESSION;
+        }
+        
+        // Nếu không có Session, kiểm tra Cookie "Ghi nhớ"
+        if (isset($_COOKIE['remember_user']) && isset($_COOKIE['remember_token'])) {
+            $userId = $_COOKIE['remember_user'];
+            $token  = $_COOKIE['remember_token'];
+
+            $userModel = new UserModel();
+            $user = $userModel->findById($userId); 
+            if ($user && md5($user['password']) === $token) {
+                // Tái tạo lại Session từ Cookie
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_role'] = $user['role'];
+                return true;
+            }
+        }
+        return null;
     }
 
     /**

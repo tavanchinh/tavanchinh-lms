@@ -1,0 +1,198 @@
+/* --- 1. BIẾN CẤU HÌNH & RESET --- */
+:root {
+    --sidebar-width: 260px;
+    --primary-color: #0d6efd;
+    --dark-bg: #1a1d20;
+    --light-bg: #f4f7f6;
+    --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --transition: all 0.3s ease;
+}
+
+body {
+    background-color: var(--light-bg);
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #334155;
+}
+
+/* --- 2. SIDEBAR & CONTENT LAYOUT --- */
+.admin-wrapper {
+    display: flex;
+    align-items: stretch;
+}
+
+#sidebar {
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    background: var(--dark-bg);
+    color: #fff;
+    transition: var(--transition);
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+#sidebar.active {
+    margin-left: calc(-1 * var(--sidebar-width));
+}
+
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: #111;
+    border-bottom: 1px solid #333;
+    text-align: center;
+}
+
+#sidebar ul li a {
+    padding: 15px 25px;
+    display: block;
+    color: #adb5bd;
+    text-decoration: none;
+    border-bottom: 1px solid #222;
+    transition: var(--transition);
+}
+
+#sidebar ul li a:hover, 
+#sidebar ul li.active > a {
+    color: #fff;
+    background: #333;
+    border-left: 5px solid var(--primary-color);
+}
+
+#content {
+    width: 100%;
+    padding: 25px;
+    transition: var(--transition);
+}
+
+/* --- 3. UI COMPONENTS (Tối ưu Laptop 14") --- */
+.card {
+    border: none;
+    box-shadow: var(--card-shadow);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+/* Scrollable Tabs cho màn hình nhỏ */
+.nav-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+.nav-pills::-webkit-scrollbar { display: none; }
+
+.table thead th {
+    background-color: #f8fafc;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    border-top: none;
+}
+
+/* Selector khóa học trong Modal */
+.course-selector {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.course-card-item {
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid #f1f5f9;
+    background: #f8fafc;
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.course-card-item:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.course-card-item.active {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+}
+.course-card-item .check-icon { display: none; color: var(--primary-color); }
+.course-card-item.active .check-icon { display: block; }
+
+/* --- 4. RESPONSIVE OPTIMIZATION --- */
+
+/* MOBILE (< 768px) */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: calc(-1 * var(--sidebar-width));
+        position: fixed;
+        z-index: 1050;
+    }
+    #sidebar.active {
+        margin-left: 0 !important;
+    }
+    #content { padding: 15px; }
+    
+    /* Chuyển Table sang dạng Card gọn hơn trên Mobile */
+    .table thead { display: none; }
+    .table tbody tr {
+        display: block;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .table td {
+        display: block;
+        width: 100%;
+        text-align: left !important;
+        padding: 5px 0 !important;
+        border: none;
+    }
+    .table td:last-child {
+        text-align: right !important;
+        margin-top: 10px;
+    }
+    
+    /* Overlay mặc định ẩn */
+    #sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040; /* Nằm dưới Sidebar (1050) nhưng trên Content */
+        display: none; /* Ẩn mặc định */
+        transition: opacity 0.3s ease;
+    }
+
+    /* Hiển thị khi có class .show */
+    #sidebar-overlay.show {
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        /* Đảm bảo sidebar nằm trên cùng khi mở */
+        #sidebar {
+            z-index: 1050;
+        }
+    }
+}
+
+/* LAPTOP 14" (Small PC screens) */
+@media (min-width: 769px) and (max-width: 1366px) {
+    #content { padding: 16px; }
+    .fw-bold { font-size: 0.95rem; }
+    .table td { font-size: 0.85rem; }
+    #sidebar { min-width: 220px; max-width: 220px; }
+    :root { --sidebar-width: 220px; }
+}
+
+footer {
+    padding: 20px 0;
+    margin-top: 30px;
+    border-top: 1px solid #e2e8f0;
+}

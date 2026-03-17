@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Hệ thống đào tạo trực tuyến phần mềm CNC' ?></title>
+    <title><?= $title ?? 'Học SketchUp & CNC Thực Chiến' ?></title>
+
+    <meta property="og:title" content="<?= $title ?? 'Học SketchUp & CNC Thực Chiến' ?>">
+    <meta property="og:description" content="<?= $meta_description ?? 'Khóa học sản xuất nội thất CNC thực chiến...' ?>">
+    <meta property="og:image" content="<?= isset($course['image']) ? '/uploads/'.$course['image'] : '/uploads/default-share.jpg' ?>">
+    <link rel="icon" href="/uploads/favicon.ico" type="image/x-icon">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -26,35 +31,51 @@
                     <?php $current_route = $_SERVER['REQUEST_URI']; ?>
                     <li class="nav-item"><a class="nav-link <?= $current_route === '/' ? 'active-custom' : '' ?>" href="/">Trang chủ</a></li>
                     
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        
+                    <?php if (isset($currentUser) && $currentUser !== null): ?>
+    
                         <li class="nav-item">
-                            <a class="nav-link text-dark <?= $current_route === '/khoa-hoc-cua-toi' ? 'active-custom' : '' ?>" href="/khoa-hoc-cua-toi">
+                            <a class="nav-link text-dark <?= ($current_route ?? '') === '/khoa-hoc-cua-toi' ? 'active-custom' : '' ?>" href="/khoa-hoc-cua-toi">
                                 <i class="bi bi-play-circle me-1"></i> Khóa học của tôi
                             </a>
                         </li>
+
                         <li class="nav-item dropdown ms-lg-3">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center bg-light rounded-pill px-3 py-1" href="#" role="button" data-bs-toggle="dropdown">
-                                <div class="avatar-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" style="width: 28px; height: 28px; font-size: 0.8rem;">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center bg-light rounded-pill px-3 py-1 border shadow-sm" href="#" role="button" data-bs-toggle="dropdown">
+                                <div class="avatar-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 30px; height: 30px; font-size: 0.85rem; font-weight: bold;">
                                     <?= mb_strtoupper(mb_substr($_SESSION['user_name'] ?? 'U', 0, 1)) ?>
                                 </div>
-                                <span class="text-dark fw-bold"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Thành viên') ?></span>
+                                <span class="text-dark fw-bold" style="font-size: 0.9rem;">
+                                    <?= htmlspecialchars($_SESSION['user_name'] ?? 'Thành viên') ?>
+                                </span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end mt-2">
-                                <li><a class="dropdown-item" href="/trang-ca-nhan"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
-                                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                                    <li><a class="dropdown-item text-primary" href="/admin/accounts"><i class="bi bi-speedometer2 me-2"></i>Quản trị hệ thống</a></li>
-                                    <li><a class="dropdown-item" href="/admin/study"><i class="bi bi-mortarboard me-2"></i>Quản lý học tập</a></li>
+
+                            <ul class="dropdown-menu dropdown-menu-end mt-2 shadow border-0">
+                                <li><a class="dropdown-item py-2" href="/trang-ca-nhan"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
+                                
+                                <?php 
+                                    $userRole = $_SESSION['user_role'] ?? '';
+                                    if ($userRole === 'admin' || $userRole === 'staff'): 
+                                ?>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-uppercase text-primary" style="font-size: 0.65rem; letter-spacing: 1px;">Quản trị & Vận hành</h6></li>
+                                    
+                                    <li><a class="dropdown-item fw-bold" href="/admin/accounts">
+                                        <i class="bi bi-speedometer2 me-2"></i>Quản trị hệ thống
+                                    </a></li>
+                                    
+                                    <li><a class="dropdown-item" href="/admin/study">
+                                        <i class="bi bi-mortarboard me-2"></i>Quản lý học tập
+                                    </a></li>
                                 <?php endif; ?>
+                                
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="/dang-xuat"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                                <li><a class="dropdown-item text-danger py-2" href="/dang-xuat"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                             </ul>
                         </li>
+
                     <?php else: ?>
                         <li class="nav-item">
-                            <a class="btn btn-login ms-lg-4 px-4 py-2" href="/dang-nhap">
-                                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
-                            </a>
+                            <a class="btn btn-login ms-lg-4 px-4 py-2 fw-bold" href="/dang-nhap">Đăng nhập</a>
                         </li>
                     <?php endif; ?>
                 </ul>

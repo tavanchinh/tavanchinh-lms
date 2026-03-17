@@ -8,35 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    
-    <style>
-        :root { --sidebar-width: 260px; --primary-color: #0d6efd; --dark-bg: #1a1d20; }
-        body { background-color: #f4f7f6; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        /* NAVBAR CHUNG */
-        .navbar-main { background: #212529; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .navbar-brand { font-weight: 800; color: #fff !important; }
-        .nav-link-admin { color: #ffc107 !important; font-weight: bold; border: 1px solid #ffc107; border-radius: 5px; margin-left: 10px; padding: 5px 15px !important; }
-        .nav-link-admin:hover { background: #ffc107; color: #000 !important; }
-
-        /* BACKEND SIDEBAR LAYOUT */
-        .admin-wrapper { display: flex; align-items: stretch; }
-        #sidebar { min-width: var(--sidebar-width); max-width: var(--sidebar-width); background: var(--dark-bg); color: #fff; transition: all 0.3s; min-height: 100vh; }
-        #sidebar.active { margin-left: calc(-1 * var(--sidebar-width)); }
-        #sidebar .sidebar-header { padding: 20px; background: #111; border-bottom: 1px solid #333; text-align: center; }
-        #sidebar ul li a { padding: 15px 25px; display: block; color: #adb5bd; text-decoration: none; border-bottom: 1px solid #222; }
-        #sidebar ul li a:hover, #sidebar ul li.active > a { color: #fff; background: #333; border-left: 5px solid var(--primary-color); }
-        
-        #content { width: 100%; padding: 30px; transition: all 0.3s; }
-        /* Tùy chỉnh giao diện Select2 cho khớp với Bootstrap */
-        .select2-container--default .select2-selection--multiple {
-            border: 1px solid #dee2e6;
-            padding: 4px;
-            border-radius: 8px;
-        }
-        
-        @media (max-width: 768px) { #sidebar { margin-left: calc(-1 * var(--sidebar-width)); } #sidebar.active { margin-left: 0; } }
-    </style>
+    <link rel="stylesheet" href="/css/backend.css?v=1.1">
 </head>
 <body>
 
@@ -73,6 +45,7 @@ $isAdminPage = strpos($_SERVER['REQUEST_URI'], 'admin') !== false || isset($isBa
     </nav>
     <main class="container"> <?php else: ?>
     <div class="admin-wrapper">
+        <div id="sidebar-overlay"></div>
         <?php $currentUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); ?>
 
         <nav id="sidebar">
@@ -108,3 +81,26 @@ $isAdminPage = strpos($_SERVER['REQUEST_URI'], 'admin') !== false || isset($isBa
                 <h4 class="mb-0"><?= $title ?? 'Quản trị' ?></h4>
             </div>
 <?php endif; ?>
+<script>
+    
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const btn = document.getElementById('sidebarCollapse');
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            content.classList.toggle('active');
+            overlay.classList.toggle('show'); // Hiện/ẩn lớp mờ
+            console.log('Sidebar toggled. Current state:', sidebar.classList.contains('active') ? 'Active' : 'Inactive');
+        }
+
+        // Click vào nút menu
+        btn.addEventListener('click', toggleSidebar);
+
+        // Click vào vùng mờ (Overlay) để đóng menu
+        overlay.addEventListener('click', toggleSidebar);
+    });
+</script>

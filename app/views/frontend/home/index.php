@@ -1,11 +1,12 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <main>
-    <section class="hero-section py-5 mb-5" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 1px solid #e2e8f0;">
-        <div class="container text-center py-5">
-            <h1 class="display-4 fw-bold text-dark mb-3">Tham gia khóa học ngay hôm nay</h1>
-            <p class="lead text-muted mb-4 mx-auto" style="max-width: 600px;">Chủ động hơn trong việc vẽ và ra file CNC. Đồng hành trọn đời cùng đội ngũ chuyên nghiệp</p>
-            <a href="#courses" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Khám phá khóa học</a>
+    <section class="hero-section py-5 mb-5 position-relative" style="background-image: url('/uploads/banner-thuc-te.jpg'); background-size: cover; background-position: center -290px; border-bottom: 1px solid #e2e8f0;">
+        <div class="position-absolute w-100 h-100 top-0 left-0" style="background-color: rgba(15, 23, 42, 0.8);"></div>
+        <div class="container text-center py-5 position-relative" style="z-index: 1;">
+            <h1 class="display-4 fw-bold text-white mb-3">Làm chủ quy trình CNC sau 15 buổi</h1>
+            <p class="lead text-light mb-4 mx-auto" style="max-width: 600px;">Chủ động hơn trong việc vẽ và ra file CNC. Đồng hành trọn đời cùng đội ngũ chuyên nghiệp, yên tâm sản xuất.</p>
+            <a href="#courses" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Khám phá khóa học ngay</a>
         </div>
     </section>
 
@@ -22,7 +23,7 @@
                                      style="height: 160px; object-fit: cover;">
                                 
                                 <div class="card-body pb-0">
-                                    <h6 class="fw-bold mb-2 text-dark" style="height: 40px; overflow: hidden;">
+                                    <h6 class="fw-bold mb-2 text-dark" >
                                         <?= htmlspecialchars($course['name']) ?>
                                     </h6>
                                 </div>

@@ -87,7 +87,7 @@
                     </ul>
                 </div>
                 <div class="card-footer bg-white text-center">
-                    <a href="/admin/students" class="small text-decoration-none">Xem tất cả học viên</a>
+                    <a href="/admin/accounts?tab=student" class="small text-decoration-none">Xem tất cả học viên</a>
                 </div>
             </div>
 

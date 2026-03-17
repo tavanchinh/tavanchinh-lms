@@ -48,7 +48,7 @@ class AuthController extends BaseController {
             header("Location: /");
             exit;
         } else {
-            $this->view('auth/dang-nhap', ['error' => 'Email hoặc mật khẩu không đúng!']);
+            $this->view('auth/login', ['error' => 'Email hoặc mật khẩu không đúng!']);
         }
     }
 }

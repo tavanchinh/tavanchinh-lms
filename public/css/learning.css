@@ -26,13 +26,13 @@ body {
 	z-index: 1050;
 }
 
-.container {
-	max-width: 1600px;
-	margin: 0 auto;
-	padding: 20px;
-	display: flex;
-	gap: 20px;
-	align-items: flex-start;
+.learning-layout .container {
+	max-width: 1600px !important;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
 }
 
 /* --- CỘT TRÁI --- */
@@ -476,7 +476,7 @@ body {
 		position: static;
 		max-height: none;
 	}
-	.container {
+	.learning-layout .container {
         display: flex;
         flex-direction: column; /* Ép các phần tử xếp thành hàng dọc */
         padding: 0; /* Tối ưu không gian viền trên mobile */
@@ -498,6 +498,9 @@ body {
     .video-player-container {
         border-radius: 0; /* Xóa bo góc để video sát mép màn hình (tùy chọn) */
     }
+	.video-info{
+		padding: 16px;
+	}
 }
 
 @media (max-width: 768px) {
@@ -510,6 +513,12 @@ body {
     .custom-tabs .nav-item {
         flex: 0 0 auto;
     }
+	.video-info{
+		padding: 8px;
+	}
+	.vjs-volume-control{
+		display: none !important;
+	}
 }
 
 /* Trong file CSS hoặc thẻ <style> */

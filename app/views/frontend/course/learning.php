@@ -2,6 +2,7 @@
 <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
 <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
 <link rel="stylesheet" href="/css/learning.css?v=1.0.3">
+<div class="learning-layout">
 <div class="container">
     <div class="video-section">
         <div class="video-player-container">
@@ -223,6 +224,7 @@
             <?php endif; ?>
         </div>
     </div>
+</div>
 </div>
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script src="https://unpkg.com/videojs-hls-quality-selector@2.0.0/dist/videojs-hls-quality-selector.min.js"></script>

@@ -73,7 +73,7 @@
 
             <div class="col-lg-4">
                 <div class="card border-0 shadow-lg sticky-top" style="top: 100px; border-radius: 20px; overflow: hidden;">
-                    <img src="/uploads/<?= htmlspecialchars($course['image'] ?: 'default.jpg') ?>" class="card-img-top" alt="Course Image" style="height: 200px; object-fit: cover;">
+                    <img src="/uploads/<?= htmlspecialchars($course['image'] ?: 'default.jpg') ?>" class="card-img-top" alt="Course Image" >
                     <div class="card-body p-4">
                         <div class="mb-3">
                             <span class="h2 fw-bold text-danger"><?= number_format($course['price'], 0, ',', '.') ?>đ</span>

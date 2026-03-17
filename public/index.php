@@ -70,7 +70,9 @@ $router->add('', 'HomeController@index');
 $router->add('trang-ca-nhan', 'UserController@index');
 $router->add('khoa-hoc-cua-toi', 'UserController@index');
 $router->add('cap-nhat-thong-tin', 'UserController@update');
+$router->add('/thanh-toan', 'PaymentController@createPayment');
 $router->add('/{slug}', 'CourseController@detail'); // Ví dụ: /khoa-hoc-lap-trinh
+
 
 $router->add('learning/{slug}', 'CourseController@learning');
 $router->add('course/stream/{id}', 'CourseController@stream');

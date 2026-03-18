@@ -219,7 +219,8 @@ class PaymentController extends BaseController {
     }
 
     public function testEmail() {
-        $this->sendSuccessEmail('chinh.tv91@gmail.com', 9);
+        //$this->sendSuccessEmail('chinh.tv91@gmail.com', 9);
+        $this->courseModel->enrollCourse(1, 9, 5000); // Gán khóa học cho user_id = 1, course_id = 9
     }
 
     private function sendSuccessEmail($email, $courseId) {

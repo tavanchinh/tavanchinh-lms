@@ -198,7 +198,7 @@ public function updateCourse($id, $data) {
             // 2. Chỉ chèn thêm (INSERT), không xóa cái cũ của người ta
             // Giả sử bảng của anh có thêm cột status và enrolled_at (nếu chưa có anh cứ bỏ ra)
             $sqlInsert = "INSERT INTO user_courses (user_id, course_id, price_at_purchase, payment_status, enrolled_at) 
-                        VALUES (?, ?, ?, 'paid', NOW())";
+                        VALUES (?, ?, ?, 'completed', NOW())";
             $stmtInsert = $this->db->prepare($sqlInsert);
             return $stmtInsert->execute([$studentId, $courseId, $price]);
         }

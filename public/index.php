@@ -71,6 +71,8 @@ $router->add('trang-ca-nhan', 'UserController@index');
 $router->add('khoa-hoc-cua-toi', 'UserController@index');
 $router->add('cap-nhat-thong-tin', 'UserController@update');
 $router->add('/thanh-toan', 'PaymentController@createPayment');
+$router->add('/kiem-tra-trang-thai-don-hang', 'PaymentController@checkStatus');
+//$router->add('/test-email', 'PaymentController@testEmail'); // Route thử nghiệm gửi email
 $router->add('/{slug}', 'CourseController@detail'); // Ví dụ: /khoa-hoc-lap-trinh
 
 

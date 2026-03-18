@@ -41,6 +41,7 @@ class BaseController {
                 // Tái tạo lại Session từ Cookie
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_phone_number'] = $user['user_phone_number'];
                 $_SESSION['user_role'] = $user['role'];
                 return true;
             }

@@ -279,5 +279,24 @@ class UserModel extends Database {
     }
 
 
+    /**
+     * Kích hoạt tài khoản người dùng (Chuyển status từ 0 sang 1 hoặc active)
+     */
+    public function activeUser($userId) {
+        // Giả sử bảng users của anh có cột 'status'
+        // Nếu anh dùng kiểu số (0: khóa, 1: hoạt động) thì dùng SET status = 1
+        // Nếu anh dùng kiểu chữ thì dùng SET status = 'active'
+        $sql = "UPDATE users SET status = 1, updated_at = NOW() WHERE id = ?";
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$userId]);
+        } catch (PDOException $e) {
+            error_log("Lỗi Active User: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
     
 }

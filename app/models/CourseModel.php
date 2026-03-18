@@ -182,4 +182,27 @@ public function updateCourse($id, $data) {
         // Nếu fetch() có dữ liệu, trả về true, ngược lại false
         return $stmt->fetch() ? true : false;
     }
+
+
+    /**
+     * Gán thêm 1 khóa học mới cho học viên (Dùng cho PayOS Webhook)
+     */
+    public function enrollCourse($studentId, $courseId, $price = 0) {
+        // 1. Kiểm tra xem học viên đã sở hữu khóa học này chưa (tránh insert trùng)
+        $checkSql = "SELECT id FROM user_courses WHERE user_id = ? AND course_id = ? LIMIT 1";
+        $stmtCheck = $this->db->prepare($checkSql);
+        $stmtCheck->execute([$studentId, $courseId]);
+        $exists = $stmtCheck->fetch();
+
+        if (!$exists) {
+            // 2. Chỉ chèn thêm (INSERT), không xóa cái cũ của người ta
+            // Giả sử bảng của anh có thêm cột status và enrolled_at (nếu chưa có anh cứ bỏ ra)
+            $sqlInsert = "INSERT INTO user_courses (user_id, course_id, price_at_purchase, payment_status, enrolled_at) 
+                        VALUES (?, ?, ?, 'paid', NOW())";
+            $stmtInsert = $this->db->prepare($sqlInsert);
+            return $stmtInsert->execute([$studentId, $courseId, $price]);
+        }
+        
+        return true; // Đã có rồi thì coi như thành công
+    }
 }

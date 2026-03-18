@@ -51,6 +51,7 @@ body {
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 0.6rem 0;
+    z-index: 11 !important;
 }
 
 .navbar-brand span {
@@ -280,20 +281,6 @@ h1 {
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(25, 135, 84, 0.3) !important;
 }
-/* CSS để làm sạch nội dung từ Editor đổ ra */
-.course-description img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-}
-.accordion-button:not(.collapsed) {
-    color: #0d6efd;
-    background-color: #f8f9fa;
-    box-shadow: none;
-}
-.list-group-item:hover {
-    background-color: #f8f9fa !important;
-}
 
 /* --- 5. TỐI ƯU MOBILE & LAPTOP 14" --- */
 
@@ -337,10 +324,7 @@ h1 {
     }
     
     .col-lg-4 {
-        width: 33.33%;
-    }
-    .hero-section{
-        background-position:center -190px !important;
+        width: 35%;
     }
 }
 

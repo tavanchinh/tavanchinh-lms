@@ -1,7 +1,0 @@
-{
-    "require": {
-        "payos/payos": "^2.0",
-        "guzzlehttp/guzzle": "^7.10",
-        "phpmailer/phpmailer": "^7.0"
-    }
-}

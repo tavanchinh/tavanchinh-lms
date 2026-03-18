@@ -1,19 +1,20 @@
 <?php
 require_once __DIR__ . '/../../payment/vendor/autoload.php';
 require_once __DIR__ . '/../../core/BaseController.php';
+require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../models/OrderModel.php';
+require_once __DIR__ . '/../models/CourseModel.php';
+
 use PayOS\PayOS;
 
 class PaymentController extends BaseController {
     private $payOS;
     private $config;
-
-    // File: C:\xampp\htdocs\tavanchinh.com\app\controllers\PaymentController.php
+    private $userModel;
+    private $orderModel;
 
     public function __construct() {
-        // Sử dụng $_SERVER['DOCUMENT_ROOT'] để luôn trỏ về gốc 'tavanchinh.com'
         $rootPath = $_SERVER['DOCUMENT_ROOT'];
-        
-        // Nạp file cấu hình từ thư mục payment ở gốc
         $configFile = $rootPath . '/../payment/config.php';
         
         if (!file_exists($configFile)) {
@@ -21,101 +22,263 @@ class PaymentController extends BaseController {
         }
         
         $this->config = require $configFile;
-
-        // Nạp Autoload của PayOS
-        $autoloadFile = $rootPath . '/../payment/vendor/autoload.php';
-        if (file_exists($autoloadFile)) {
-            require_once $autoloadFile;
-        } else {
-            die("Lỗi: Không tìm thấy thư mục vendor của PayOS!");
-        }
-
         $this->payOS = new \PayOS\PayOS(
             $this->config['client_id'], 
             $this->config['api_key'], 
             $this->config['checksum_key']
         );
+
+        $this->userModel = new UserModel();
+        $this->orderModel = new OrderModel();
+        $this->courseModel = new CourseModel(); 
     }
 
-    /**
-     * Kịch bản: Tạo link thanh toán khi khách bấm "Đăng ký"
-     */
     public function createPayment() {
-        // 1. Lấy dữ liệu từ Ajax gửi lên
+        header('Content-Type: application/json');
         $json = file_get_contents('php://input');
         $dataRequest = json_decode($json, true);
 
-        $name  = $dataRequest['name'] ?? $_POST['name'] ?? null;
-        $phone = $dataRequest['phone'] ?? $_POST['phone'] ?? null;
+        $name       = $dataRequest['name'] ?? null;
+        $phone      = $dataRequest['phone'] ?? null;
+        $courseId   = $dataRequest['courseId'] ?? null;
+        $amount     = 5000; //intval($dataRequest['amount'] ?? 0);
+        $isRegister = $dataRequest['isRegister'] ?? false;
 
-        if (!$phone) {
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Vui lòng nhập số điện thoại để nhận tài khoản!']);
+        if (!$phone || !$courseId) {
+            echo json_encode(['error' => 'Thiếu thông tin thanh toán!']);
             return;
         }
 
-        // 2. Tạo mã đơn hàng duy nhất (orderCode)
-        $orderCode = intval(filter_var(microtime(true) * 10000, FILTER_SANITIZE_NUMBER_INT));
+        // 1. XỬ LÝ USER (Lấy ID hoặc Tạo mới)
+        $userId = $_SESSION['user_id'] ?? null; // Giả sử anh lưu user_id khi login
 
-        // 3. Chuẩn bị dữ liệu gửi sang PayOS
-        $data = [
-            "orderCode" => $orderCode,
-            "amount" => 5000000, // Giá khóa học của anh
+        if ($isRegister && !$userId) {
+            // Kiểm tra email trùng
+            if ($this->userModel->checkEmailExists($dataRequest['email'])) {
+                echo json_encode(['error' => 'Email này đã được đăng ký tài khoản khác!']);
+                return;
+            }
+            // Tạo User mới ở trạng thái chờ kích hoạt (nếu anh có cột status)
+            $userId = $this->userModel->createStudentAndGetId([
+                'name'         => $name,
+                'email'        => $dataRequest['email'],
+                'phone_number' => $phone,
+                'password'     => password_hash($dataRequest['pass'], PASSWORD_DEFAULT),
+                'role'         => 'student'
+            ]);
+        }
+
+        if (!$userId) {
+            // Trường hợp khách chưa login mà cũng không chọn đăng ký (Mua ẩn danh)
+            // Anh có thể yêu cầu login hoặc tạo 1 user 'guest' tùy ý.
+            echo json_encode(['error' => 'Bạn vui lòng đăng nhập hoặc chọn Đăng ký tài khoản!']);
+            return;
+        }
+
+        // 2. TẠO MÃ ĐƠN HÀNG VÀ LƯU DATABASE (PENDING)
+        $orderCode = intval(substr(strval(microtime(true) * 10000), -9));
+
+        $dbOrder = $this->orderModel->createOrder([
+            'order_code'   => $orderCode,
+            'user_id'      => $userId,
+            'course_id'    => $courseId,
+            'amount'       => $amount,
+            'phone_number' => $phone
+        ]);
+
+        if (!$dbOrder) {
+            echo json_encode(['error' => 'Không thể khởi tạo đơn hàng trên hệ thống!']);
+            return;
+        }
+
+        // 3. GỬI SANG PAYOS LẤY QR
+        $dataPayOS = [
+            "orderCode"   => $orderCode,
+            "amount"      => $amount, 
             "description" => "HOC CNC " . $phone,
-            "returnUrl" => $this->config['return_url'],
-            "cancelUrl" => $this->config['cancel_url']
+            "returnUrl"   => $this->config['return_url'],
+            "cancelUrl"   => $this->config['cancel_url']
         ];
 
         try {
-            $response = $this->payOS->createPaymentLink($data);
-            
-            // Bắt đầu session để lưu thông tin đối soát nếu cần (giống file mẫu của anh)
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['pending_order_'.$orderCode] = $phone;
-
-            // Trả về JSON chứa qrCode để JavaScript hiển thị ảnh
-            header('Content-Type: application/json');
+            $response = $this->payOS->createPaymentLink($dataPayOS);
             echo json_encode([
-                'qrCode' => $response['qrCode'], // Đây là chuỗi VietQR hoặc link ảnh QR
+                'qrCode'    => $response['qrCode'],
                 'orderCode' => $orderCode
             ]);
-
         } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'PayOS Error: ' . $e->getMessage()]);
         }
     }
 
-    /**
-     * Kịch bản: Webhook nhận thông báo tiền về từ PayOS
-     */
     public function handleWebhook() {
         $body = json_decode(file_get_contents('php://input'), true);
         
         try {
-            // Xác thực dữ liệu tránh hacker gửi đơn ảo
             $verifiedData = $this->payOS->verifyPaymentWebhookData($body);
             
             if ($verifiedData['status'] == 'PAID') {
-                $description = $verifiedData['description'];
+                $orderCode = $verifiedData['orderCode'];
                 
-                // Tách SĐT từ mô tả bằng Regex
-                preg_match('/[0-9]{10}/', $description, $matches);
-                $phone = $matches[0] ?? null;
-
-                if ($phone) {
-                    // --- ĐOẠN QUAN TRỌNG NHẤT ---
-                    // Anh thực hiện gọi hàm mở khóa bài học trong DB của anh tại đây
-                    // $db->query("UPDATE users_courses SET status='active' WHERE phone='$phone'");
+                // 1. Tìm đơn hàng trong DB
+                $order = $this->orderModel->findByOrderCode($orderCode);
+                
+                if ($order && $order['status'] !== 'completed') {
+                    // 2. Cập nhật trạng thái Đơn hàng -> Completed
+                    $this->orderModel->updateStatus($orderCode, 'completed', $verifiedData['paymentLinkId']);
                     
-                    // (Tùy chọn) Gửi thông báo về Telegram/Zalo cho anh Chinh
-                    // sendTelegramNotify("Khách $phone vừa thanh toán 5.000.000đ thành công!");
+                    // 3. Kích hoạt quyền truy cập khóa học (Bảng user_courses hoặc tương đương)
+                    $courseModel = new CourseModel();
+                    $courseModel->enrollCourse($order['user_id'], $order['course_id']); 
+                    
+                    // 4. Nếu là user mới tạo (status = 0), kích hoạt user luôn
+                    $this->userModel->activeUser($order['user_id']);
                 }
             }
             
-            return json_encode(["success" => true]);
+            header('Content-Type: application/json');
+            echo json_encode(["success" => true]);
         } catch (\Exception $e) {
-            return json_encode(["success" => false, "message" => $e->getMessage()]);
+            header('Content-Type: application/json');
+            echo json_encode(["success" => false, "message" => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Hàm dành cho JavaScript gọi mỗi 3-5s để check trạng thái đơn hàng
+     */
+    public function checkStatus() {
+        header('Content-Type: application/json');
+        $orderCode = $_GET['orderCode'] ?? null;
+
+        if (!$orderCode) {
+            echo json_encode(['status' => 'ERROR', 'message' => 'Missing Order Code']);
+            return;
+        }
+
+        try {
+            // 1. Kiểm tra trạng thái trong DB trước (để giảm tải gọi API sang PayOS)
+            $order = $this->orderModel->findByOrderCode($orderCode);
+            
+            // Chặn xử lý trùng lặp: Nếu DB đã ghi nhận thành công
+            if ($order && $order['status'] === 'completed') {
+                echo json_encode(['status' => 'completed']);
+                return;
+            }
+
+            // 2. Nếu DB chưa xong, chủ động gọi PayOS để kiểm tra
+            $response = $this->payOS->getPaymentLinkInformation($orderCode);
+
+            if ($response['status'] == 'PAID') {
+                
+                // --- BẮT ĐẦU LOGIC GÁN KHÓA HỌC & KÍCH HOẠT ---
+                
+                // Bước A: Cập nhật trạng thái đơn hàng trong bảng orders
+                $dbUpdated = $this->orderModel->updateStatus($orderCode, 'completed', $response['id']);
+
+                if ($dbUpdated) {
+                    // Bước B: Gán khóa học vào bảng user_courses
+                    // (Sử dụng ID người dùng và ID khóa học lấy từ bảng orders)
+                    $this->courseModel->enrollCourse($order['user_id'], $order['course_id'], $order['amount']);
+                    
+                    // Bước C: Kích hoạt tài khoản (Nếu status đang là 0)
+                    $this->userModel->activeUser($order['user_id']);
+
+                    // THỰC HIỆN TỰ ĐỘNG ĐĂNG NHẬP
+                    if (session_status() === PHP_SESSION_NONE) session_start();
+                    
+                    // Lấy thông tin đầy đủ của user từ database
+                    $fullUser = $this->userModel->findById($order['user_id']);
+                    
+                    if ($fullUser) {
+                        //$_SESSION['user_phone_number'] = $fullUser['phone_number'];
+                        $_SESSION['user_id']     = $fullUser['id'];
+                        $_SESSION['user_name']   = $fullUser['name'];
+                        $_SESSION['user_email']  = $fullUser['email'];
+                        $_SESSION['user_role']   = $fullUser['role'];
+                        // Thêm bất kỳ session nào mà hệ thống của anh đang dùng để kiểm tra login
+                    }
+
+                    // Bước D: (Tùy chọn) Anh có thể gửi Email thông báo tại đây giống web cũ
+                    // sendSuccessEmail($order['email'], $order['course_id']);
+
+                    echo json_encode(['status' => 'completed']);
+                    exit;
+                } else {
+                    echo json_encode(['status' => 'ERROR', 'message' => 'Database update failed']);
+                    exit;
+                }
+            }
+
+            // Trả về trạng thái thực tế từ PayOS (PENDING, CANCELLED...)
+            echo json_encode(['status' => $response['status']]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['status' => 'ERROR', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function testEmail() {
+        $this->sendSuccessEmail('chinh.tv91@gmail.com', 9);
+    }
+
+    private function sendSuccessEmail($email, $courseId) {
+        // 1. Nạp thủ công PHPMailer (Vì anh đã có trong vendor)
+        require_once __DIR__ . '/../../payment/vendor/phpmailer/phpmailer/src/Exception.php';
+        require_once __DIR__ . '/../../payment/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+        require_once __DIR__ . '/../../payment/vendor/phpmailer/phpmailer/src/SMTP.php';
+
+        // 2. Lấy thông tin khóa học
+        $course = $this->courseModel->findById($courseId);
+        $courseName = $course['name'] ?? 'Khóa học CNC';
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+        try {
+            // Cấu hình SMTP
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'fitcplugin@gmail.com'; // Email của anh
+            $mail->Password   = 'chtbwbernkirzjvh';    // Mật khẩu ứng dụng Gmail (16 ký tự)
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+            $mail->CharSet    = 'UTF-8';
+
+            // Người gửi & Người nhận
+            $mail->setFrom('email-cua-anh@gmail.com', 'Tạ Văn Chinh');
+            $mail->addAddress($email);
+
+            // Nội dung
+            $mail->isHTML(true);
+            $mail->Subject = '[Xác nhận] Thanh toán thành công khóa học ' . $courseName;
+            
+            $mail->Body = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px;'>
+                    <h2 style='color: #28a745; text-align: center;'>Thanh toán thành công!</h2>
+                    <p>Chào bạn,</p>
+                    <p>Hệ thống <strong>chinh.edu.vn</strong> đã nhận được thanh toán của bạn cho khóa học: <br>
+                    <span style='font-size: 18px; font-bold: true; color: #007bff;'>$courseName</span></p>
+                    
+                    <div style='background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <p style='margin: 0;'><strong>Tài khoản đăng nhập:</strong> $email</p>
+                        <p style='margin: 5px 0 0 0;'><strong>Trạng thái:</strong> Đã kích hoạt (Học trọn đời)</p>
+                    </div>
+
+                    <p>Bây giờ bạn đã có thể vào học ngay tại đây:</p>
+                    <p style='text-align: center;'>
+                        <a href='https://chinh.edu.vn' style='background: #28a745; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;'>VÀO HỌC NGAY</a>
+                    </p>
+                    <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
+                    <p style='font-size: 12px; color: #999;'>Đây là email tự động, bạn vui lòng không phản hồi email này. Nếu cần hỗ trợ kỹ thuật, hãy liên hệ Zalo: 0972 808 368.</p>
+                </div>
+            ";
+
+            $mail->send();
+            return true;
+        } catch (\Exception $e) {
+            error_log("PHPMailer Error: " . $mail->ErrorInfo);
+            return false;
         }
     }
 }

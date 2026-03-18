@@ -196,9 +196,9 @@
                 btn.innerHTML = 'THANH TOÁN AN TOÀN';
             }
         } catch (e) {
-            alert("Không thể kết nối máy chủ!");
+            //alert("Không thể kết nối máy chủ!");
             console.log("Lỗi chi tiết:", e); // Nhấn F12 trên trình duyệt để xem cái này
-            alert("Lỗi: " + e.message);
+            //alert("Lỗi: " + e.message);
             btn.disabled = false;
             btn.disabled = false;
         }

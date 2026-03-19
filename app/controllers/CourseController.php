@@ -271,7 +271,12 @@ class CourseController extends BaseController {
         // 3. Kiểm tra quyền sở hữu & Tài liệu
         $userId = $_SESSION['user_id'] ?? null;
         $isOwned = $userId ? $courseModel->checkOwnership($userId, $course['id']) : false;
-        $documents = $docModel->getDocsByCourse($course['id']);
+        // 2. Logic mới: Chỉ lấy tài liệu nếu đã sở hữu (đã trả phí)
+        if ($isOwned) {
+            $documents = $docModel->getDocsByCourse($course['id']);
+        } else {
+            $documents = []; // Trả về mảng rỗng để giao diện không hiện gì cả
+        }
 
         // 4. Lấy dữ liệu bài học
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
@@ -497,11 +502,13 @@ class CourseController extends BaseController {
         // Lấy thêm danh sách chương và bài học thuộc khóa học này (nếu cần)
         $chapterModel = new ChapterModel();
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
+        $description = $course['summary'] ?? '';
         
         $this->view('frontend/course/detail', [
             'course' => $course,
             'chapters' => $chapters,
             'title' => $course['name'],
+            'meta_description' => $description,
             'isOwned' => $isOwned,
             'isLoggedIn' => !empty($userId)
         ]);

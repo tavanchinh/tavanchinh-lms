@@ -30,7 +30,7 @@
                     <div class="mb-0">
                         <h4 class="fw-bold mb-4">Nội dung khóa học</h4>
                         
-                        <div class="accordion accordion-flush border rounded-3 overflow-hidden" id="accordionCourse">
+                        <div class="accordion accordion-flush border overflow-hidden" style="border-radius: 13px;" id="accordionCourse">
                             <?php if (!empty($chapters)): ?>
                                 <?php foreach ($chapters as $index => $chapter): ?>
                                     <div class="accordion-item border-bottom">
@@ -50,7 +50,7 @@
                                                                     <span class="text-dark small fw-medium"><?= htmlspecialchars($lesson['name']) ?></span>
                                                                 </div>
                                                                 <?php if($lesson['is_preview']): ?>
-                                                                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">Học thử</span>
+                                                                    <a href="/learning/<?= $course['slug'] ?>?id=<?= $lesson['id'] ?>" class="badge rounded-pill text-decoration-none bg-success-subtle text-success border border-success-subtle">Học thử</a>
                                                                 <?php else: ?>
                                                                     <i class="bi bi-lock-fill text-muted small"></i>
                                                                 <?php endif; ?>

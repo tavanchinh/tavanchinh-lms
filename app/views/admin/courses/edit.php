@@ -345,17 +345,140 @@
   </div>
 </div>
 
-<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/super-build/ckeditor.js"></script>
+
 
 <script>
-    // CKEditor
-    ClassicEditor.create(document.querySelector('#editor_summary'), {
-        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote']
-    }).catch(error => { console.error(error); });
 
-    ClassicEditor.create(document.querySelector('#editor_description'), {
-        toolbar: ['heading', '|', 'bold', 'italic', 'link','imageUpload','mediaEmbed', 'bulletedList', 'numberedList', 'insertTable', 'blockQuote', 'undo', 'redo']
-    }).catch(error => { console.error(error); });
+    CKEDITOR.ClassicEditor.create(document.querySelector('#editor_summary'), {
+        // 1. Toolbar có nút Source
+        toolbar: {
+            items: [
+                'heading', '|',
+                'bold', 'italic', 'link',
+                'bulletedList', 'numberedList', 'insertTable', 'blockQuote',
+                'undo', 'redo'
+            ]
+        },
+        // 2. CHẶN TRIỆT ĐỂ: Phải xóa cả cụm liên quan đến nhau
+        removePlugins: [
+            // Nhóm Slash Command & Mention (Gây lỗi anh vừa gặp)
+            'SlashCommand', 'Mention','Emoji',
+            
+            // Nhóm Collaboration (Cộng tác)
+            'RealTimeCollaborativeComments',
+            'RealTimeCollaborativeTrackChanges',
+            'RealTimeCollaborativeRevisionHistory',
+            'PresenceList',
+            'Comments',
+            'TrackChanges',
+            'TrackChangesData',
+            'RevisionHistory',
+
+            // Nhóm Office & PDF (Đòi License)
+            'PasteFromOfficeEnhanced',
+            'ExportPdf',
+            'ExportWord',
+            'Pagination',
+            
+            // Nhóm File Management
+            'CKBox',
+            'CKFinder',
+            'EasyImage',
+            
+            // Nhóm AI & Trợ lý
+            'WProofreader',
+            'MathType',
+            'FormatPainter',
+            'TableOfContents',
+            'DocumentOutline',
+            'Template',
+            'CaseChange',
+            'MultiLevelList'
+        ],
+        // 3. Cho phép HTML tự do
+        htmlSupport: {
+            allow: [
+                {
+                    name: /.*/,
+                    attributes: true,
+                    classes: true,
+                    styles: true
+                }
+            ]
+        }
+    }).then(editor => {
+        editor.editing.view.change(writer => {
+            writer.setStyle('height', '200px', editor.editing.view.document.getRoot());
+        });
+    }).catch(error => {
+        console.error('Lỗi khởi tạo CKEditor:', error);
+    });
+
+
+    CKEDITOR.ClassicEditor.create(document.querySelector('#editor_description'), {
+        // 1. Toolbar có nút Source
+        toolbar: {
+            items: [
+                'sourceEditing', '|',
+                'heading', '|',
+                'bold', 'italic', 'link', 'imageUpload', 'mediaEmbed',
+                'bulletedList', 'numberedList', 'insertTable', 'blockQuote',
+                'undo', 'redo'
+            ]
+        },
+        // 2. CHẶN TRIỆT ĐỂ: Phải xóa cả cụm liên quan đến nhau
+        removePlugins: [
+            // Nhóm Slash Command & Mention (Gây lỗi anh vừa gặp)
+            'SlashCommand', 'Mention','Emoji',
+            
+            // Nhóm Collaboration (Cộng tác)
+            'RealTimeCollaborativeComments',
+            'RealTimeCollaborativeTrackChanges',
+            'RealTimeCollaborativeRevisionHistory',
+            'PresenceList',
+            'Comments',
+            'TrackChanges',
+            'TrackChangesData',
+            'RevisionHistory',
+
+            // Nhóm Office & PDF (Đòi License)
+            'PasteFromOfficeEnhanced',
+            'ExportPdf',
+            'ExportWord',
+            'Pagination',
+            
+            // Nhóm File Management
+            'CKBox',
+            'CKFinder',
+            'EasyImage',
+            
+            // Nhóm AI & Trợ lý
+            'WProofreader',
+            'MathType',
+            'FormatPainter',
+            'TableOfContents',
+            'DocumentOutline',
+            'Template',
+            'CaseChange',
+            'MultiLevelList'
+        ],
+        // 3. Cho phép HTML tự do
+        htmlSupport: {
+            allow: [
+                {
+                    name: /.*/,
+                    attributes: true,
+                    classes: true,
+                    styles: true
+                }
+            ]
+        }
+    }).catch(error => {
+        console.error('Lỗi khởi tạo CKEditor:', error);
+    });
+
+    
 
     // Preview Image
     document.getElementById('course_image').addEventListener('change', function(e) {

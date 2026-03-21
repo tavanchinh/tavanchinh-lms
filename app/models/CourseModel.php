@@ -100,34 +100,57 @@ public function updateCourse($id, $data) {
 }
 
 
-    public function assignUserToCourse($userId, $courseId) {
-        // Kiểm tra xem đã gán chưa để tránh trùng lặp (tùy chọn)
+    // Gán khóa học cho học viên (Dùng cho AdminController)
+    public function assignUserToCourse($userId, $courseId, $paidAmount = 0) {
+        // 1. Kiểm tra xem đã gán chưa
         $checkSql = "SELECT * FROM user_courses WHERE user_id = ? AND course_id = ?";
         $exists = $this->query($checkSql, [$userId, $courseId])->fetch();
 
-        if ($exists) return false; // Đã gán rồi
+        if ($exists) return false; 
 
-        $sql = "INSERT INTO user_courses (user_id, course_id, enrolled_at) VALUES (?, ?, NOW())";
-        return $this->query($sql, [$userId, $courseId]);
+        // 2. Lưu trực tiếp số tiền nộp vào trường price_at_purchase
+        // (Lưu ý: Anh nên giữ cả cột enrolled_at để biết ngày họ nộp tiền)
+        $sql = "INSERT INTO user_courses (user_id, course_id, price_at_purchase, enrolled_at) 
+                VALUES (?, ?, ?, NOW())";
+        
+        return $this->query($sql, [$userId, $courseId, $paidAmount]);
     }
 
-    /**
-     * Đồng bộ danh sách khóa học của học viên
-     */
-    public function syncUserCourses($studentId, $courseIds) {
-        // 1. Xóa tất cả các gán cũ
-        $sqlDelete = "DELETE FROM user_courses WHERE user_id = ?";
-        $stmtDelete = $this->db->prepare($sqlDelete);
-        $stmtDelete->execute([$studentId]);
-
-        // 2. Gán lại danh sách mới (Bỏ cột created_at nếu bảng chưa có)
+    
+    public function syncUserCourses($userId, $courseIds = [], $paidAmounts = []) {
+        // 1. Xóa những khóa học KHÔNG nằm trong danh sách mới gửi lên
         if (!empty($courseIds)) {
-            // Chỉ chèn vào 2 cột chắc chắn có là user_id và course_id
-            $sqlInsert = "INSERT INTO user_courses (user_id, course_id) VALUES (?, ?)";
-            $stmtInsert = $this->db->prepare($sqlInsert);
-            
-            foreach ($courseIds as $courseId) {
-                $stmtInsert->execute([$studentId, $courseId]);
+            // Tạo chuỗi ?, ?, ? để dùng cho câu lệnh IN
+            $placeholders = implode(',', array_fill(0, count($courseIds), '?'));
+            $sqlDelete = "DELETE FROM user_courses WHERE user_id = ? AND course_id NOT IN ($placeholders)";
+            $paramsDelete = array_merge([$userId], $courseIds);
+            $this->query($sqlDelete, $paramsDelete);
+        } else {
+            // Nếu danh sách mới rỗng, xóa sạch khóa học của user này
+            $this->query("DELETE FROM user_courses WHERE user_id = ?", [$userId]);
+            return true;
+        }
+
+        // 2. Duyệt danh sách được chọn để Cập nhật hoặc Thêm mới
+        foreach ($courseIds as $courseId) {
+            $rawAmount = $paidAmounts[$courseId] ?? 0;
+            $cleanAmount = (int)preg_replace('/[^0-9]/', '', $rawAmount);
+
+            // Kiểm tra xem bản ghi đã tồn tại chưa
+            $check = $this->query("SELECT id FROM user_courses WHERE user_id = ? AND course_id = ?", [$userId, $courseId])->fetch();
+
+            if ($check) {
+                // ĐÃ CÓ: Chỉ cập nhật tiền, KHÔNG chạm vào enrolled_at
+                $this->query(
+                    "UPDATE user_courses SET price_at_purchase = ? WHERE user_id = ? AND course_id = ?", 
+                    [$cleanAmount, $userId, $courseId]
+                );
+            } else {
+                // CHƯA CÓ: Thêm mới hoàn toàn (enrolled_at sẽ lấy CURRENT_TIMESTAMP mặc định)
+                $this->query(
+                    "INSERT INTO user_courses (user_id, course_id, price_at_purchase, enrolled_at) VALUES (?, ?, ?, NOW())", 
+                    [$userId, $courseId, $cleanAmount]
+                );
             }
         }
         return true;
@@ -137,11 +160,10 @@ public function updateCourse($id, $data) {
      * Lấy danh sách ID các khóa học học viên ĐÃ tham gia
      */
     public function getUserEnrolledIds($userId) {
-        $sql = "SELECT course_id FROM user_courses WHERE user_id = ?";
+        $sql = "SELECT course_id, price_at_purchase FROM user_courses WHERE user_id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId]);
-        // Trả về mảng phẳng chỉ chứa ID: [1, 4, 7]
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 

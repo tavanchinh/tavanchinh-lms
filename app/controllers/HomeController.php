@@ -17,6 +17,9 @@ class HomeController extends BaseController {
         $courses = $courseModel->getAllActive();
 
         // Truyền dữ liệu vào view home
-        $this->view('frontend/home/index', ['courses' => $courses]);
+        $this->view('frontend/home/index', [
+            'courses' => $courses,
+            'meta_description' => 'Làm chủ quy trình CNC sau 15 buổi.Chủ động hơn trong việc vẽ và ra file CNC. Đồng hành trọn đời cùng đội ngũ chuyên nghiệp, yên tâm sản xuất.'
+            ]);
     }
 } 

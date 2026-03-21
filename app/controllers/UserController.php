@@ -93,4 +93,14 @@ class UserController extends BaseController {
             exit;
         }
     }
+
+    public function keepAlive() {
+        if (isset($_SESSION['user_id'])) {
+            $userModel = new UserModel();
+            // Cập nhật hoặc chèn một log loại 'heartbeat' hoặc 'online'
+            $userModel->updateHeartbeat($_SESSION['user_id']);
+        }
+        echo json_encode(['status' => 'alive']);
+        exit;
+    }
 }

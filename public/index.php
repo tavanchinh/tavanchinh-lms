@@ -24,7 +24,7 @@ $router->add('dang-xuat', 'AuthController@logout');
 // Trang chủ quản trị (Thống kê, danh sách nhanh)
 $router->add('admin', 'AdminController@index');
 
-// Quản lý học viên / nhân viên
+// Quản lý học viên / nhân viên / user 
 $router->add('admin/accounts', 'AdminController@accounts');
 $router->add('admin/students', 'AdminController@students');
 $router->add('admin/students/store', 'AdminController@storeStudent');
@@ -32,6 +32,7 @@ $router->add('admin/students/get-courses/{id}', 'AdminController@getCourses');
 $router->add('admin/students/update-ajax', 'AdminController@updateStudentAjax');
 $router->add('admin/staff', 'AdminController@staff');
 $router->add('admin/users/delete/{id}', 'AdminController@deleteUser');
+$router->add('admin/users/logs/{id}', 'AdminController@userLogs');
 
 // ==========================================
 // 3. QUẢN LÝ KHÓA HỌC (COURSE CONTROLLER)
@@ -72,6 +73,7 @@ $router->add('khoa-hoc-cua-toi', 'UserController@index');
 $router->add('cap-nhat-thong-tin', 'UserController@update');
 $router->add('/thanh-toan', 'PaymentController@createPayment');
 $router->add('/kiem-tra-trang-thai-don-hang', 'PaymentController@checkStatus');
+$router->add('/user/keep-alive', 'UserController@keepAlive');
 //$router->add('/test-email', 'PaymentController@testEmail'); // Route thử nghiệm gửi email
 $router->add('/{slug}', 'CourseController@detail'); // Ví dụ: /khoa-hoc-lap-trinh
 

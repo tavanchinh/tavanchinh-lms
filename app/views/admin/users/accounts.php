@@ -230,13 +230,21 @@
                         <label class="form-label small fw-bold">Gán khóa học (Click để chọn nhiều)</label>
                         <div class="course-selector">
                             <?php foreach ($courses as $course): ?>
-                                <div class="course-card-item" onclick="toggleCourse(this, <?= $course['id'] ?>)">
+                                <div class="course-card-item" id="item_<?= $course['id'] ?>" onclick="toggleCourse(this, <?= $course['id'] ?>)">
+                                    
                                     <div class="flex-grow-1">
                                         <div class="fw-bold small"><?= $course['name'] ?></div>
-                                        <div class="text-muted small"><?= number_format($course['price']) ?> VNĐ</div>
+                                        <div class="text-muted small">Học phí: <span class="course-price"><?= number_format($course['price'], 0, ',', '.') ?></span> đ</div>
+                                        <input type="checkbox" name="course_ids[]" value="<?= $course['id'] ?>" class="d-none">
                                     </div>
+
+                                    <div class="paid-amount-wrapper" onclick="event.stopPropagation();">
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <input type="text" name="paid_amounts[<?= $course['id'] ?>]" class="form-control paid-input money-input" placeholder="Tiền nộp"  oninput="formatCurrency(this)" disabled> 
+                                        </div>
+                                    </div>
+
                                     <i class="bi bi-check-circle-fill check-icon"></i>
-                                    <input type="checkbox" name="course_ids[]" value="<?= $course['id'] ?>" class="d-none">
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -298,11 +306,20 @@
                             <div class="course-selector" id="edit_course_list">
                                 <?php foreach ($courses as $course): ?>
                                     <div class="course-card-item" data-id="<?= $course['id'] ?>" onclick="toggleCourse(this, <?= $course['id'] ?>)">
+                                        
                                         <div class="flex-grow-1">
                                             <div class="fw-bold" style="font-size: 0.8rem;"><?= $course['name'] ?></div>
+                                            <div class="text-muted small">Học phí: <?= number_format($course['price'], 0, ',', '.') ?> đ</div>
+                                            <input type="checkbox" name="course_ids[]" value="<?= $course['id'] ?>" class="d-none">
                                         </div>
+
+                                        <div class="paid-amount-wrapper" onclick="event.stopPropagation();">
+                                            <div class="input-group input-group-sm" style="width: 110px;">
+                                                <input type="text" name="paid_amounts[<?= $course['id'] ?>]" class="form-control paid-input money-input" placeholder="Tiền nộp"  oninput="formatCurrency(this)" disabled> 
+                                            </div>
+                                        </div>
+
                                         <i class="bi bi-check-circle-fill check-icon"></i>
-                                        <input type="checkbox" name="course_ids[]" value="<?= $course['id'] ?>" class="d-none">
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -366,17 +383,26 @@
     });
 
     function toggleCourse(element, courseId) {
-        // Tìm checkbox ẩn bên trong phần tử vừa click
+        // 1. Tìm các thành phần
         const checkbox = element.querySelector('input[type="checkbox"]');
+        const paidInput = element.querySelector('.paid-input');
         
-        // Đảo ngược trạng thái checkbox
+        // 2. Đảo trạng thái checkbox
         checkbox.checked = !checkbox.checked;
         
-        // Thêm hoặc xóa class 'active' để đổi màu giao diện
+        // 3. Sử dụng class 'active' theo CSS cũ của anh
         if (checkbox.checked) {
             element.classList.add('active');
+            paidInput.disabled = false;
+            
+            // Tự động điền giá gốc vào nếu anh muốn nộp đủ (Tùy chọn)
+            // paidInput.value = element.querySelector('.course-price').innerText.replace(/,/g, '');
+            
+            paidInput.focus(); 
         } else {
             element.classList.remove('active');
+            paidInput.disabled = true;
+            paidInput.value = ''; 
         }
     }
 
@@ -387,31 +413,53 @@
         document.getElementById('edit_s_email').value = user.email;
         document.getElementById('edit_s_phone').value = user.phone_number;
 
-        // Gán vai trò hiện tại vào select (nếu thẻ này tồn tại - trường hợp là admin)
         const roleSelect = document.getElementById('edit_s_role');
         if (roleSelect) {
             roleSelect.value = user.role;
         }
 
-        // Reset tất cả thẻ khóa học về trạng thái chưa chọn
+        // --- BƯỚC 1: RESET TRẠNG THÁI MẶC ĐỊNH ---
         const cards = document.querySelectorAll('#edit_course_list .course-card-item');
         cards.forEach(card => {
             card.classList.remove('active');
             card.querySelector('input[type="checkbox"]').checked = false;
+            
+            // Tìm ô nhập tiền: Xóa giá trị và Khóa lại
+            const paidInput = card.querySelector('.paid-input');
+            if (paidInput) {
+                paidInput.value = '';
+                paidInput.disabled = true;
+            }
         });
 
-        // Gọi AJAX để lấy danh sách khóa học mà học viên ĐÃ THAM GIA
+        // --- BƯỚC 2: GỌI AJAX LẤY DỮ LIỆU ---
         fetch(`/admin/students/get-courses/${user.id}`)
             .then(response => response.json())
-            .then(enrolledIds => {
-                enrolledIds.forEach(courseId => {
-                    const card = document.querySelector(`#edit_course_list .course-card-item[data-id="${courseId}"]`);
+            .then(enrolledData => {
+                // enrolledData bây giờ là mảng: [{course_id: 1, price_at_purchase: 500000}, ...]
+                enrolledData.forEach(item => {
+                    const card = document.querySelector(`#edit_course_list .course-card-item[data-id="${item.course_id}"]`);
+                    
                     if (card) {
+                        // 1. Kích hoạt thẻ và checkbox
                         card.classList.add('active');
                         card.querySelector('input[type="checkbox"]').checked = true;
+
+                        // 2. Xử lý ô nhập tiền
+                        const paidInput = card.querySelector('.paid-input');
+                        if (paidInput) {
+                            paidInput.disabled = false; // Mở khóa để Admin có thể sửa
+                            if (item.price_at_purchase) {
+                                // Định dạng số thành chuỗi có dấu chấm (1000000 -> 1.000.000)
+                                paidInput.value = new Intl.NumberFormat('vi-VN').format(item.price_at_purchase);
+                            } else {
+                                paidInput.value = '';
+                            }
+                        }
                     }
                 });
-            });
+            })
+            .catch(error => console.error('Lỗi lấy khóa học:', error));
 
         const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
         modal.show();
@@ -419,7 +467,16 @@
 
     function submitEditStudent() {
         const form = document.getElementById('formEditStudent');
+        
+        // MẸO QUAN TRỌNG: 
+        // Trước khi tạo FormData, ta tạm thời enable các ô tiền của những khóa học ĐÃ CHỌN 
+        // để trình duyệt chịu gửi dữ liệu đi.
+        const activePaidInputs = form.querySelectorAll('.course-card-item.active .paid-input');
+        activePaidInputs.forEach(input => input.disabled = false);
+
         const formData = new FormData(form);
+
+        // Sau khi lấy dữ liệu xong, nếu muốn an toàn giao diện thì có thể khóa lại (không bắt buộc vì trang sẽ reload)
         
         // 1. Hiển thị thông báo đang xử lý
         Swal.fire({
@@ -434,9 +491,9 @@
         // 2. Gửi yêu cầu AJAX
         fetch('/admin/students/update-ajax', {
             method: 'POST',
-            // Lưu ý: Dùng body: formData sẽ tốt hơn nếu bạn có ý định upload ảnh sau này
-            // Ở đây tôi giữ URLSearchParams theo ý bạn hoặc chuyển sang FormData đều được
-            body: new URLSearchParams(formData),
+            // CHỖ NÀY: Nên dùng trực tiếp formData thay vì URLSearchParams 
+            // để hỗ trợ tốt nhất cho các mảng phức tạp như paid_amounts[id]
+            body: formData, 
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -447,18 +504,16 @@
         })
         .then(data => {
             if (data.success) {
-                // 3. Thông báo thành công
                 Swal.fire({
                     icon: 'success',
                     title: 'Thành công!',
-                    text: 'Thông tin tài khoản đã được cập nhật.',
+                    text: data.message || 'Thông tin tài khoản đã được cập nhật.',
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
-                    location.reload(); // Load lại trang để cập nhật bảng dữ liệu
+                    //location.reload(); 
                 });
             } else {
-                // 4. Thông báo lỗi từ server (ví dụ trùng email)
                 Swal.fire({
                     icon: 'error',
                     title: 'Thất bại',
@@ -471,7 +526,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Lỗi kết nối',
-                text: 'Không thể gửi dữ liệu đến máy chủ. Vui lòng thử lại.'
+                text: 'Không thể gửi dữ liệu đến máy chủ.'
             });
         });
     }
@@ -517,6 +572,28 @@
             });
             <?php unset($_SESSION['success_msg']); ?>
         <?php endif; ?>
+    });
+
+    function formatCurrency(input) {
+        // 1. Lấy giá trị thô (xóa hết các ký tự không phải số)
+        let value = input.value.replace(/\D/g, "");
+        
+        // 2. Nếu ô trống thì dừng
+        if (value === "") {
+            input.value = "";
+            return;
+        }
+
+        // 3. Định dạng lại thành chuỗi có dấu chấm phân cách hàng nghìn
+        // Ví dụ: 1000000 -> 1.000.000
+        input.value = new Intl.NumberFormat('vi-VN').format(value);
+    }
+
+    // Hàm bổ sung: Nếu anh muốn tự động áp dụng cho tất cả ô có class money-input khi load trang
+    document.querySelectorAll('.money-input').forEach(input => {
+        input.addEventListener('input', function() {
+            formatCurrency(this);
+        });
     });
 </script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

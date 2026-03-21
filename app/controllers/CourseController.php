@@ -263,6 +263,7 @@ class CourseController extends BaseController {
         $chapterModel = new ChapterModel();
         $lessonModel = new LessonModel();
         $docModel = new DocumentModel(); 
+        $userModel = new UserModel();
 
         // 2. Lấy thông tin khóa học
         $course = $courseModel->findBySlug($slug);
@@ -274,6 +275,7 @@ class CourseController extends BaseController {
         // 2. Logic mới: Chỉ lấy tài liệu nếu đã sở hữu (đã trả phí)
         if ($isOwned) {
             $documents = $docModel->getDocsByCourse($course['id']);
+            $userModel->writeAccessLog($userId, 'view_course'); // Ghi log xem tài liệu
         } else {
             $documents = []; // Trả về mảng rỗng để giao diện không hiện gì cả
         }

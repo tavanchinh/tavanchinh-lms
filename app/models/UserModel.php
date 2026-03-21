@@ -68,7 +68,7 @@ class UserModel extends Database {
 
     // Hàm lấy tất cả người dùng (Dùng cho quản trị)
     public function getAllUsers($limit = null) {
-        $sql = "SELECT id, name, email, role FROM users ORDER BY registered_at DESC";
+        $sql = "SELECT id, name, email, role, registered_at  FROM users ORDER BY registered_at DESC";
         
         if ($limit !== null) {
             // Ép kiểu (int) để đảm bảo an toàn tuyệt đối trước khi nối chuỗi
@@ -202,15 +202,17 @@ class UserModel extends Database {
      * Cập nhật thông tin cơ bản của người dùng
      */
     public function updateUser($id, $data) {
+        $role = $data['role'] ?? 'student';
+        
         // Kiểm tra xem có cập nhật mật khẩu mới không
         if (!empty($data['password'])) {
             // Đổi phone -> phone_number
             $sql = "UPDATE users SET name = ?, email = ?, phone_number = ?, password = ?, role = ? WHERE id = ?";
-            $params = [$data['name'], $data['email'], $data['phone'], $data['password'], $data['role'], $id];
+            $params = [$data['name'], $data['email'], $data['phone_number'], $data['password'], $role, $id];
         } else {
             // Đổi phone -> phone_number
             $sql = "UPDATE users SET name = ?, email = ?, phone_number = ?, role = ? WHERE id = ?";
-            $params = [$data['name'], $data['email'], $data['phone'], $data['role'], $id];
+            $params = [$data['name'], $data['email'], $data['phone_number'], $role, $id];
         }
 
         $stmt = $this->db->prepare($sql);
@@ -295,6 +297,123 @@ class UserModel extends Database {
             error_log("Lỗi Active User: " . $e->getMessage());
             return false;
         }
+    }
+
+
+    /**
+     * Tạo dấu vân tay thiết bị dựa trên trình duyệt và ngôn ngữ
+     */
+    private function getDeviceFingerprint() {
+        $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        $lang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'unknown';
+        // Tạo chuỗi băm duy nhất cho thiết bị này
+        return hash('sha256', $agent . $lang);
+    }
+
+
+    public function writeAccessLog($userId, $eventType = 'login') {
+        // 1. Cập nhật thời gian đăng nhập gần nhất vào bảng users
+        if ($eventType == 'login') {
+            $sqlUrl = "UPDATE users SET last_login = NOW() WHERE id = ?";
+            $stmtUrl = $this->db->prepare($sqlUrl);
+            $stmtUrl->execute([$userId]);
+        }
+
+        // 2. Ghi Log chi tiết
+        $sql = "INSERT INTO access_logs (user_id, event_type, ip_address, device_fingerprint, user_agent) 
+                VALUES (?, ?, ?, ?, ?)";
+        
+        $params = [
+            $userId,
+            $eventType,
+            $_SERVER['REMOTE_ADDR'],
+            $this->getDeviceFingerprint(), // Hàm tạo mã hash ở bước trước
+            $_SERVER['HTTP_USER_AGENT']
+        ];
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
+
+    /**
+     * Lấy danh sách người dùng đăng nhập trên nhiều thiết bị nhất
+     */
+    public function getTopSuspectedUsers($limit = 5) {
+        $sql = "SELECT 
+                    u.id, 
+                    u.name, 
+                    u.email, 
+                    u.last_login,
+                    COUNT(DISTINCT al.device_fingerprint) as total_devices, 
+                    COUNT(DISTINCT al.ip_address) as total_ips
+                FROM access_logs al
+                JOIN users u ON al.user_id = u.id
+                GROUP BY al.user_id
+                HAVING total_devices > 0
+                ORDER BY total_devices DESC, total_ips DESC
+                LIMIT :limit"; // Dùng placeholder có tên :limit
+                
+        $stmt = $this->db->prepare($sql);
+        
+        // Ép kiểu bắt buộc là số nguyên để SQL không bị lỗi nháy đơn
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Lấy chi tiết lịch sử truy cập của một User cụ thể
+     */
+    public function getUserAccessLogs($userId) {
+        $sql = "SELECT * FROM access_logs 
+                WHERE user_id = ? 
+                ORDER BY created_at DESC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
+    }
+
+
+    /**
+     * Thống kê số lượng học viên và doanh thu theo ngày
+     */
+    public function getStudentRegistrationStats($days = 30) {
+        $sql = "SELECT 
+                    DATE_FORMAT(enrolled_at, '%d/%m') as date_label, -- Chỉ lấy Ngày/Tháng
+                    COUNT(*) as student_count,
+                    SUM(price_at_purchase) as total_revenue
+                FROM user_courses 
+                WHERE enrolled_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+                GROUP BY DATE(enrolled_at)
+                ORDER BY DATE(enrolled_at) ASC"; // Sắp xếp theo ngày gốc để không bị lệch thứ tự
+                //echo $sql;die;
+        return $this->query($sql, [$days])->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Lấy danh sách học viên đang online (có hoạt động trong 10 phút qua)
+     */
+    public function getOnlineUsers($minutes = 50) {
+        // Ai có last_seen trong vòng  phút đổ lại thì coi là đang Online
+        $sql = "SELECT id, name, email, last_seen 
+                FROM users 
+                WHERE last_seen >= DATE_SUB(NOW(), INTERVAL ? MINUTE) 
+                AND role = 'student'
+                ORDER BY last_seen DESC LIMIT 15";
+                
+        return $this->query($sql, [$minutes])->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    /**
+     * Cập nhật nhịp đập (thời gian hoạt động cuối cùng) của User
+     */
+    public function updateHeartbeat($userId) {
+        $sql = "UPDATE users SET last_seen = NOW() WHERE id = ?";
+        return $this->query($sql, [$userId]);
     }
 
 

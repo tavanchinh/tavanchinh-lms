@@ -41,7 +41,7 @@ class PaymentController extends BaseController {
         $name       = $dataRequest['name'] ?? null;
         $phone      = $dataRequest['phone'] ?? null;
         $courseId   = $dataRequest['courseId'] ?? null;
-        $amount     = 5000; //intval($dataRequest['amount'] ?? 0);
+        $amount     = intval($dataRequest['amount'] ?? 0);
         $isRegister = $dataRequest['isRegister'] ?? false;
 
         if (!$phone || !$courseId) {

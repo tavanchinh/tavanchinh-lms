@@ -585,6 +585,12 @@
             }, 3000);
         }
     }
+
+
+    // Cứ mỗi 2 phút (120000ms) báo cáo một lần
+    setInterval(function() {
+        fetch('/user/keep-alive');
+    }, 120000);
 </script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../core/BaseController.php';
 require_once __DIR__ . '/../models/CourseModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../models/DeviceHelper.php';
 
 class AdminController extends BaseController {
 
@@ -16,10 +17,19 @@ class AdminController extends BaseController {
     public function index() {
         $courseModel = new CourseModel();
         $userModel = new UserModel();
+        $stats = $userModel->getStudentRegistrationStats(30);
 
+        $chartData = [
+            'labels'   => array_column($stats, 'date_label'),
+            'students' => array_column($stats, 'student_count'),
+            'revenue'  => array_column($stats, 'total_revenue')
+        ];
         $data = [
             'courses' => $courseModel->getAllCourses(),
-            'users'   => $userModel->getAllUsers($limit = 10), 
+            'users'   => $userModel->getAllUsers($limit = 6), 
+            'suspected_users' => $userModel->getTopSuspectedUsers(5),
+            'chartData' => $chartData,
+            'online_users'    => $userModel->getOnlineUsers(10),
             'title'   => 'Bảng điều khiển Admin'
         ];
 
@@ -126,8 +136,14 @@ class AdminController extends BaseController {
         if ($studentId) {
             // 4. Gán khóa học
             if (!empty($_POST['course_ids'])) {
+                $paidAmounts = $_POST['paid_amounts'] ?? []; // Lấy mảng tiền nộp
+
                 foreach ($_POST['course_ids'] as $courseId) {
-                    $courseModel->assignUserToCourse($studentId, $courseId);
+                    // Lấy số tiền của đúng khóa học này, mặc định là 0 nếu không nhập
+                    $amount = isset($paidAmounts[$courseId]) ? (float)$paidAmounts[$courseId] : 0;
+                    
+                    // Truyền thêm tham số $amount vào hàm gán khóa học
+                    $courseModel->assignUserToCourse($studentId, $courseId, $amount);
                 }
             }
             echo json_encode(['success' => true, 'message' => 'Đã thêm học viên và gán khóa học thành công!']);
@@ -155,7 +171,7 @@ class AdminController extends BaseController {
         $userData = [
             'name'  => $_POST['name'],
             'email' => $_POST['email'],
-            'phone' => $_POST['phone_number']
+            'phone_number' => $_POST['phone_number']
         ];
 
         // Chỉ cập nhật role nếu người đang thực hiện là admin và có gửi role lên
@@ -172,7 +188,12 @@ class AdminController extends BaseController {
         if ($userModel->updateUser($id, $userData)) {
             // Thực hiện đồng bộ khóa học được chọn từ Modal
             $courseIds = $_POST['course_ids'] ?? []; // Lấy mảng từ checkbox card
-            $courseModel->syncUserCourses($id, $courseIds);
+            $paidAmounts = $_POST['paid_amounts'] ?? [];
+            //var_dump($paidAmounts);die(); // Debug mảng tiền nộp từ form
+            $courseModel->syncUserCourses($id, $courseIds, $paidAmounts); // Hàm này sẽ xóa hết khóa học cũ và chèn lại theo danh sách mới
+
+           
+            
 
             echo json_encode(['success' => true]);
         } else {
@@ -214,5 +235,27 @@ class AdminController extends BaseController {
 
         header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/admin/accounts'));
         exit;
+    }
+
+
+    public function userLogs($id) {
+        $userModel = new UserModel();
+        
+        // 1. Lấy thông tin user để hiện tiêu đề
+        $user = $userModel->findById($id);
+        if (!$user) {
+            die("Người dùng không tồn tại");
+        }
+
+        // 2. Lấy danh sách log
+        $logs = $userModel->getUserAccessLogs($id);
+
+        $data = [
+            'title' => 'Chi tiết truy cập: ' . $user['name'],
+            'user'  => $user,
+            'logs'  => $logs
+        ];
+
+        $this->view('admin/users/user_logs', $data);
     }
 }

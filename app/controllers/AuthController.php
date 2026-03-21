@@ -36,6 +36,7 @@ class AuthController extends BaseController {
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
+            $_SESSION['user_phone_number'] = $user['phone_number'];
 
             // 2. Xử lý Ghi nhớ đăng nhập (Cookie)
             if ($remember) {
@@ -44,7 +45,7 @@ class AuthController extends BaseController {
                 // Tạo một token bảo mật dựa trên hash password (nếu đổi pass, token này sẽ hỏng -> an toàn)
                 setcookie('remember_token', md5($user['password']), $expiry, "/");
             }
-
+            $userModel->writeAccessLog($user['id'], 'login'); // Ghi log đăng nhập
             header("Location: /");
             exit;
         } else {

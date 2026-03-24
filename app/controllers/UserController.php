@@ -4,14 +4,20 @@ require_once __DIR__ . '/../../core/BaseController.php';
 require_once __DIR__ . '/../models/CourseModel.php';
 require_once __DIR__ . '/../models/LessonModel.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
 class UserController extends BaseController {
     
     public function __construct() {
-        // Kiểm tra đăng nhập ngay khi vào bất kỳ hàm nào của Profile
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        
+    }
+
+    // Tạo hàm phụ để bảo vệ các trang riêng tư
+    private function requireLogin() {
         if (!isset($_SESSION['user_id'])) {
             header("Location: /dang-nhap");
             exit;
@@ -19,11 +25,9 @@ class UserController extends BaseController {
     }
 
     public function index() {
+        $this->requireLogin();
         $userId = $_SESSION['user_id'] ?? null;
-        if (!$userId) {
-            header('Location: /dang-nhap');
-            exit;
-        }
+        
 
         $userModel = new UserModel();
         $user = $userModel->findById($userId);
@@ -69,6 +73,7 @@ class UserController extends BaseController {
     }
 
     public function update() {
+        $this->requireLogin();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $userId = $_SESSION['user_id'];
             $name = $_POST['name'] ?? '';
@@ -84,13 +89,165 @@ class UserController extends BaseController {
 
             // Xử lý đổi mật khẩu nếu có nhập
             $newPass = $_POST['new_password'] ?? '';
-            if (!empty($newPass)) {
+            $newPassword = $_POST['new_password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+
+            if (!empty($newPassword)) {
+                if ($newPassword !== $confirmPassword) {
+                    // Trả về lỗi nếu mật khẩu không khớp (phòng trường hợp vượt qua JS)
+                    header("Location: /trang-ca-nhan?activeTab=settings&error=password_mismatch");
+                    exit;
+                }
+                if (strlen($newPassword) < 6) {
+                    header("Location: /trang-ca-nhan?activeTab=settings&error=password_too_short");
+                    exit;
+                }
                 $hashedPass = password_hash($newPass, PASSWORD_DEFAULT);
                 $userModel->updatePassword($userId, $hashedPass);
             }
 
-            header("Location: /profile?success=1");
+            header("Location: /trang-ca-nhan?success=1");
             exit;
+        }
+    }
+
+
+    /**
+     * Hiển thị form nhập email quên mật khẩu
+     */
+    public function forgotPassword() {
+        $this->view('auth/forgot_password', ['title' => 'Quên mật khẩu']);
+    }
+
+
+    /**
+     * Xử lý gửi mail chứa link reset
+     */
+    public function sendResetLink() {
+        $email = $_POST['email'] ?? '';
+        $userModel = new UserModel();
+        $user = $userModel->findByEmail($email);
+
+        if ($user) {
+            $token = bin2hex(random_bytes(32));
+            $userModel->saveResetToken($email, $token);
+
+            // Gửi mail (Anh thay thông tin Gmail của anh vào đây)
+            $this->sendEmail($email, $token,$user['name']);
+        }
+
+        // Redirect về trang cũ kèm thông báo thành công (dù email có tồn tại hay không)
+        header("Location: /quen-mat-khau?sent=1");
+        exit;
+    }
+
+    /**
+     * Hiển thị form đặt lại mật khẩu mới khi click từ mail
+     */
+    public function resetPassword() {
+        $token = $_GET['token'] ?? '';
+        $userModel = new UserModel();
+        $resetData = $userModel->checkResetToken($token);
+
+        if (!$resetData) {
+            // Nếu token sai hoặc hết hạn (quá 30p)
+            header("Location: /quen-mat-khau?error=token_expired");
+            exit;
+        }
+
+        $this->view('auth/reset-password', [
+            'token' => $token, 
+            'title' => 'Đặt lại mật khẩu'
+        ]);
+    }
+
+    /**
+     * Xử lý cập nhật mật khẩu mới vào DB
+     */
+    public function updatePasswordAfterReset() {
+        $token = $_POST['token'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+
+        if ($password !== $confirm_password || strlen($password) < 6) {
+            header("Location: /reset-password?token=$token&error=invalid_password");
+            exit;
+        }
+
+        $userModel = new UserModel();
+        $resetData = $userModel->checkResetToken($token);
+
+        if ($resetData) {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Cập nhật pass mới cho user
+            $userModel->updatePasswordByEmail($resetData['email'], $hashedPassword);
+            
+            // Xóa token đã dùng
+            $userModel->deleteResetToken($token);
+
+            header("Location: /dang-nhap?reset_success=1");
+        } else {
+            header("Location: /quen-mat-khau?error=system_error");
+        }
+        exit;
+    }
+
+    private function sendEmail($email, $token,$userName = 'Học viên') {
+        // 1. Nạp thủ công PHPMailer (Vì anh đã có trong vendor)
+        require_once __DIR__ . '/../../payment/vendor/phpmailer/phpmailer/src/Exception.php';
+        require_once __DIR__ . '/../../payment/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+        require_once __DIR__ . '/../../payment/vendor/phpmailer/phpmailer/src/SMTP.php';
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'chinh.edu.vn@gmail.com'; // Email gửi
+            $mail->Password   = 'isuw xrxi zgic ytjy';    // Mã 16 ký tự app password
+            $mail->SMTPSecure = 'tls';
+            $mail->Port       = 587;
+            $mail->CharSet    = 'UTF-8';
+
+            $mail->setFrom('chinh.edu.vn@gmail.com', 'Hỗ trợ Tạ Văn Chinh');
+            $mail->addAddress($email);
+
+            $resetLink = "https://tavanchinh.com/reset-password?token=" . $token;
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Khôi phục mật khẩu tài khoản';
+            // Nội dung Email tối ưu
+            $mail->Body = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 30px;'>
+                    <div style='text-align: center; margin-bottom: 25px;'>
+                        <h2 style='color: #0d6efd; margin: 0;'>Khôi phục mật khẩu</h2>
+                        <p style='color: #666; font-size: 14px;'>Hệ thống đào tạo Tạ Văn Chinh</p>
+                    </div>
+                    
+                    <p>Chào <strong>$userName</strong>,</p>
+                    <p>Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn gắn với email này.</p>
+                    <p>Vui lòng nhấn vào nút bên dưới để tiến hành thay đổi mật khẩu (Link có hiệu lực trong <strong>30 phút</strong>):</p>
+                    
+                    <div style='text-align: center; margin: 35px 0;'>
+                        <a href='$resetLink' style='background: #0d6efd; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);'>ĐẶT LẠI MẬT KHẨU</a>
+                    </div>
+                    
+                    <p style='color: #666; font-size: 13px; line-height: 1.5; background: #f9f9f9; padding: 15px; border-radius: 5px;'>
+                        <strong>Lưu ý:</strong> Nếu bạn không yêu cầu thay đổi này, vui lòng bỏ qua email này. Tài khoản của bạn vẫn sẽ được bảo mật tuyệt đối.
+                    </p>
+                    
+                    <hr style='border: 0; border-top: 1px solid #eee; margin: 25px 0;'>
+                    
+                    <div style='text-align: center; color: #999; font-size: 12px;'>
+                        <p style='margin: 5px 0;'>Hỗ trợ kỹ thuật: <strong>0972.808.368</strong></p>
+                        <p style='margin: 5px 0;'>Website: <a href='https://tavanchinh.com' style='color: #0d6efd; text-decoration: none;'>tavanchinh.com</a></p>
+                    </div>
+                </div>";
+
+            $mail->send();
+        } catch (Exception $e) {
+            // Ghi log lỗi nếu không gửi được mail
+            error_log("Mailer Error: {$mail->ErrorInfo}");
         }
     }
 

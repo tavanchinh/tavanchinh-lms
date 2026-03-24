@@ -7,6 +7,7 @@
   $fullUrl = $protocol . $host . $_SERVER['REQUEST_URI'];
   // Đường dẫn gốc của ảnh
   $baseUrl = $protocol . $host;
+  $meta_description = isset($meta_description) ? $meta_description : 'Đào tạo phần mềm CNC thực chiến';
 ?>
 <!DOCTYPE html>
 <html lang="vi">

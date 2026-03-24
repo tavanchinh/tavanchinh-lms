@@ -115,7 +115,7 @@ class CourseController extends BaseController {
                             $docModel->addDocument([
                                 'course_id' => $id,
                                 'file_name' => $originalName,
-                                'file_path' => 'public/uploads/documents/' . $savedFileName,
+                                'file_path' => 'uploads/documents/' . $savedFileName,
                                 'file_size' => $this->formatSizeUnits($size),
                                 'file_type' => $ext
                             ]);

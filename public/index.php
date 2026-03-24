@@ -74,6 +74,12 @@ $router->add('cap-nhat-thong-tin', 'UserController@update');
 $router->add('/thanh-toan', 'PaymentController@createPayment');
 $router->add('/kiem-tra-trang-thai-don-hang', 'PaymentController@checkStatus');
 $router->add('/user/keep-alive', 'UserController@keepAlive');
+// Cấu hình Route cho chức năng Quên mật khẩu
+$router->add('/quen-mat-khau', 'UserController@forgotPassword');
+$router->add('/forgot-password-process', 'UserController@sendResetLink');
+$router->add('/reset-password', 'UserController@resetPassword');
+$router->add('/reset-password-process', 'UserController@updatePasswordAfterReset');
+
 //$router->add('/test-email', 'PaymentController@testEmail'); // Route thử nghiệm gửi email
 $router->add('/{slug}', 'CourseController@detail'); // Ví dụ: /khoa-hoc-lap-trinh
 

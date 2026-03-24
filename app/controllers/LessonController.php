@@ -6,7 +6,7 @@ class LessonController extends BaseController {
 
     public function __construct() {
         $this->checkLogin();
-        $this->checkRole(['admin', 'staff']);
+        $this->checkRole(['admin', 'staff','student']);
     }
 
     // Lưu bài học mới (Từ Modal trong trang Edit Course)

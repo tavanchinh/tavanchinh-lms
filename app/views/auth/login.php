@@ -40,6 +40,12 @@
         </div>
 
         <div class="col-md-7 form-section">
+            <?php if(isset($_GET['reset_success'])): ?>
+                <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> Đặt lại mật khẩu thành công!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
+            <?php endif; ?>
             <div class="mb-4">
                 <h3 class="fw-bold text-dark">Đăng nhập</h3>
                 <p class="text-muted">Nhập thông tin để truy cập vào hệ thống</p>
@@ -59,7 +65,7 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <label class="form-label small fw-bold">Mật khẩu</label>
-                        <a href="/#" class="small text-decoration-none">Quên mật khẩu?</a>
+                        <a href="/quen-mat-khau" class="small text-decoration-none">Quên mật khẩu?</a>
                     </div>
                     <input type="password" name="password" class="form-control" value="<?= $saved_pass ?>" placeholder="••••••••" required>
                 </div>
@@ -90,10 +96,25 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php if (isset($error)): ?>
 <script>
     Swal.fire({ icon: 'error', title: 'Đăng nhập thất bại', text: '<?= $error ?>', confirmButtonColor: '#0d6efd' });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tìm tất cả các thông báo có class .alert
+        const alerts = document.querySelectorAll('.alert');
+        
+        alerts.forEach(function(alert) {
+            // Thiết lập chờ 5 giây (5000ms) rồi tự đóng
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
 </script>
+
 <?php endif; ?>
 
 </body>

@@ -280,6 +280,46 @@ class UserModel extends Database {
         }
     }
 
+    /**
+     * Cập nhật mật khẩu mới cho User
+     */
+    public function updatePassword($userId, $hashedPassword) {
+        $sql = "UPDATE users SET password = ?, last_seen = NOW() WHERE id = ?";
+        return $this->query($sql, [$hashedPassword, $userId]);
+    }
+
+    public function updatePasswordByEmail($email, $hashedPassword) {
+        return $this->query("UPDATE users SET password = ? WHERE email = ?", [$hashedPassword, $email]);
+    }
+
+    /**
+     * Lưu Token quên mật khẩu
+     */
+    public function saveResetToken($email, $token) {
+        // Xóa token cũ của email này (nếu có) để tránh rác
+        $this->query("DELETE FROM password_resets WHERE email = ?", [$email]);
+        
+        $sql = "INSERT INTO password_resets (email, token, created_at) VALUES (?, ?, NOW())";
+        return $this->query($sql, [$email, $token]);
+    }
+
+    /**
+     * Kiểm tra Token hợp lệ (Trong vòng 30 phút)
+     */
+    public function checkResetToken($token) {
+        $sql = "SELECT email FROM password_resets 
+                WHERE token = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 MINUTE) 
+                LIMIT 1";
+        return $this->query($sql, [$token])->fetch();
+    }
+
+    /**
+     * Xóa Token sau khi đã đổi mật khẩu thành công
+     */
+    public function deleteResetToken($token) {
+        return $this->query("DELETE FROM password_resets WHERE token = ?", [$token]);
+    }
+
 
     /**
      * Kích hoạt tài khoản người dùng (Chuyển status từ 0 sang 1 hoặc active)

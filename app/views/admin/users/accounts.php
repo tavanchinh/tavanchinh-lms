@@ -367,7 +367,7 @@
                     timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
-                    location.reload(); // Load lại trang để hiện học viên mới
+                    //location.reload(); // Load lại trang để hiện học viên mới
                 });
             } else {
                 Swal.fire('Lỗi!', data.message, 'error');

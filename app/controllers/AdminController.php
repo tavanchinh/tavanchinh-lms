@@ -11,24 +11,34 @@ class AdminController extends BaseController {
         $this->checkRole(['admin', 'staff']);
     }
 
-    /**
-     * Trang Dashboard tổng quan
-     */
+    
+
+
     public function index() {
         $courseModel = new CourseModel();
         $userModel = new UserModel();
-        $stats = $userModel->getStudentRegistrationStats(30);
-
+        
+        // Khởi tạo chartData mặc định là rỗng
         $chartData = [
-            'labels'   => array_column($stats, 'date_label'),
-            'students' => array_column($stats, 'student_count'),
-            'revenue'  => array_column($stats, 'total_revenue')
+            'labels'   => [],
+            'students' => [],
+            'revenue'  => []
         ];
+        // CHỈ lấy dữ liệu biểu đồ nếu user là admin
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            $stats = $userModel->getStudentRegistrationStats(30);
+            $chartData = [
+                'labels'   => array_column($stats, 'date_label'),
+                'students' => array_column($stats, 'student_count'),
+                'revenue'  => array_column($stats, 'total_revenue')
+            ];
+        }
+
         $data = [
             'courses' => $courseModel->getAllCourses(),
             'users'   => $userModel->getAllUsers($limit = 6), 
             'suspected_users' => $userModel->getTopSuspectedUsers(5),
-            'chartData' => $chartData,
+            'chartData' => $chartData, // Biến này giờ phụ thuộc vào quyền admin
             'online_users'    => $userModel->getOnlineUsers(10),
             'title'   => 'Bảng điều khiển Admin'
         ];
@@ -139,11 +149,11 @@ class AdminController extends BaseController {
                 $paidAmounts = $_POST['paid_amounts'] ?? []; // Lấy mảng tiền nộp
 
                 foreach ($_POST['course_ids'] as $courseId) {
-                    // Lấy số tiền của đúng khóa học này, mặc định là 0 nếu không nhập
-                    $amount = isset($paidAmounts[$courseId]) ? (float)$paidAmounts[$courseId] : 0;
+                    $rawAmount = $paidAmounts[$courseId] ?? 0;
+                    $cleanAmount = (int)preg_replace('/[^0-9]/', '', $rawAmount);
                     
                     // Truyền thêm tham số $amount vào hàm gán khóa học
-                    $courseModel->assignUserToCourse($studentId, $courseId, $amount);
+                    $courseModel->assignUserToCourse($studentId, $courseId, $cleanAmount);
                 }
             }
             echo json_encode(['success' => true, 'message' => 'Đã thêm học viên và gán khóa học thành công!']);

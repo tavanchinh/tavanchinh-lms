@@ -22,4 +22,16 @@ class HomeController extends BaseController {
             'meta_description' => 'Làm chủ quy trình CNC sau 15 buổi.Chủ động hơn trong việc vẽ và ra file CNC. Đồng hành trọn đời cùng đội ngũ chuyên nghiệp, yên tâm sản xuất.'
             ]);
     }
+
+    public function documentation() {
+        
+        $courseModel = new CourseModel();
+        $courses = $courseModel->getAllActive();
+
+        // Truyền dữ liệu vào view home
+        $this->view('frontend/home/documentation', [
+            'courses' => $courses,
+            'meta_description' => 'Tài liệu hướng dẫn sử dụng hệ thống quản lý học viên và khóa học CNC.'
+            ]);
+    }
 } 

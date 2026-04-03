@@ -68,6 +68,7 @@ $router->add('admin/study/fast-complete', 'LessonController@adminFastComplete');
 // ==========================================
 $router->add('trang-chu', 'HomeController@index'); 
 $router->add('', 'HomeController@index');
+$router->add('tai-lieu', 'HomeController@documentation'); 
 $router->add('trang-ca-nhan', 'UserController@index');
 $router->add('khoa-hoc-cua-toi', 'UserController@index');
 $router->add('cap-nhat-thong-tin', 'UserController@update');

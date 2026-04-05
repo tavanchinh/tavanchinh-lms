@@ -45,13 +45,26 @@ class PaymentController extends BaseController {
         $isRegister = $dataRequest['isRegister'] ?? false;
         $isDebt     = $dataRequest['isDebtPayment'] ?? false;
 
-        if (!$phone || !$courseId) {
-            echo json_encode(['error' => 'Thiếu thông tin thanh toán!']);
-            return;
-        }
-
         // 1. XỬ LÝ USER (Lấy ID hoặc Tạo mới)
         $userId = $_SESSION['user_id'] ?? null; // Giả sử anh lưu user_id khi login
+        // LOGIC KIỂM TRA MỚI:
+        if ($isDebt) {
+            // Nếu là trả nợ: Chỉ cần có UserId (đã login) và CourseId là đủ
+            if (!$userId || !$courseId) {
+                echo json_encode(['error' => 'Thông tin xác thực không hợp lệ!']);
+                return;
+            }
+            // Lấy phone từ session hoặc DB để ghi vào đơn hàng (nếu cần)
+            $phone = $_SESSION['user_phone'] ?? 'N/A'; 
+        } else {
+            // Nếu là đăng ký mới: Bắt buộc phải có Phone và CourseId
+            if (!$phone || !$courseId) {
+                echo json_encode(['error' => 'Thiếu số điện thoại hoặc khóa học!']);
+                return;
+            }
+        }
+
+        
 
         if ($isRegister && !$userId) {
             // Kiểm tra email trùng
@@ -77,7 +90,7 @@ class PaymentController extends BaseController {
         }
 
         // Nếu là trả nợ, nội dung description nên khác đi để anh dễ quản lý
-        $description = $isDebt ? "THANH TOAN NOT " . $courseId : "DK HOC CNC " . ($phone ?? $userId);
+        $description = $isDebt ? "THANH TOAN NOT KHOA HOC"  : "DK KHOA HOC CNC " . ($phone ?? $userId);
         $description = substr($description, 0, 25);
 
         // 2. TẠO MÃ ĐƠN HÀNG VÀ LƯU DATABASE (PENDING)

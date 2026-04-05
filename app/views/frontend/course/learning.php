@@ -581,7 +581,7 @@
         else if (type === 'payment_required') {
             content = `
                 <div class="overlay-content animate__animated animate__zoomIn">
-                    <div class="mb-3">
+                    <div class="mb-3" id="qr-icon">
                         <i class="bi bi-qr-code-scan" style="font-size: 3.5rem; color: #00d2ff;"></i>
                     </div>
                     <h2 class="fw-bold text-white">Mở toàn bộ khóa học</h2>
@@ -685,9 +685,11 @@
     window.generatePaymentQR = function(lessonId, amount) {
         const displayArea = document.getElementById('qr-display-area');
         const btnGetQr = document.getElementById('btn-get-qr');
+        const qrIcon = document.getElementById('qr-icon'); // Lấy phần tử icon
         
         btnGetQr.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang tạo mã...';
         btnGetQr.disabled = true;
+        
 
         // Lấy courseId từ biến PHP truyền xuống View
         const courseId = <?= json_encode($course['id']) ?>;
@@ -707,13 +709,17 @@
         .then(response => response.json())
         .then(data => {
             if (data.qrCode) {
+                // ✅ ẨN ICON QR TẠI ĐÂY
+                if (qrIcon) {
+                    //qrIcon.style.display = 'none'; 
+                    qrIcon.classList.add('d-none'); // Hoặc dùng qrIcon.classList.add('d-none') nếu anh dùng Bootstrap
+                }
+                // Tạo link ảnh từ chuỗi VietQR (Sử dụng QuickChart ổn định)
+                const qrImageUrl = `https://quickchart.io/qr?text=${encodeURIComponent(data.qrCode)}&size=200&margin=2`;
                 displayArea.innerHTML = `
-                    <div class="bg-white p-3 rounded-4 shadow-lg animate__animated animate__flipInY" style="max-width: 300px; margin: 0 auto;">
-                        <img src="${data.qrCode}" class="img-fluid rounded-3 mb-2" alt="QR PayOS">
-                        <div class="text-dark">
-                            <div class="small fw-bold text-muted text-uppercase" style="font-size: 10px;">Quét mã để học tiếp ngay</div>
-                            <div class="fw-bold text-primary mt-1">${amount}đ</div>
-                        </div>
+                    <div class="bg-white p-3 rounded-4 shadow-lg animate__animated animate__flipInY" style="max-width: 200px; margin: 0 auto;">
+                        <img src="${qrImageUrl}" class="img-fluid rounded-3 mb-2" alt="QR PayOS">
+                        <p class="text-center small text-muted mb-0">Quét mã để thanh toán</p>
                     </div>
                 `;
             } else {

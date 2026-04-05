@@ -272,16 +272,69 @@ class CourseController extends BaseController {
         // 3. Kiểm tra quyền sở hữu & Tài liệu
         $userId = $_SESSION['user_id'] ?? null;
         $isOwned = $userId ? $courseModel->checkOwnership($userId, $course['id']) : false;
-        // 2. Logic mới: Chỉ lấy tài liệu nếu đã sở hữu (đã trả phí)
+        
+        // --- MỚI: Lấy thông tin nợ và điểm chặn ---
+        $accessLevel = 2; // Mặc định mở hết
+        $lockAtLessonId = null;
+        $remainingAmount = 0;
+
         if ($isOwned) {
+            $enrollment = $courseModel->getEnrollmentDetails($userId, $course['id']);
+            //echo '<pre>';
+            //print_r($enrollment);
+            //echo '</pre>';die;
+            if ($enrollment) {
+                $accessLevel = $enrollment['access_level'];
+                $lockAtLessonId = $enrollment['lock_at_lesson_id'];
+                $remainingAmount = $enrollment['remaining_amount'];
+            }
             $documents = $docModel->getDocsByCourse($course['id']);
-            $userModel->writeAccessLog($userId, 'view_course'); // Ghi log xem tài liệu
         } else {
-            $documents = []; // Trả về mảng rỗng để giao diện không hiện gì cả
+            $documents = [];
         }
 
         // 4. Lấy dữ liệu bài học
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
+
+        // 5. Xử lý logic bài học (Inject biến khóa nợ phí)
+        $totalLessons = 0;
+        $isLockedFound = false; // Biến cờ: Một khi đã gặp bài chặn, tất cả bài sau đều khóa
+
+        foreach ($chapters as &$chapter) {
+            if (!empty($chapter['lessons'])) {
+                
+                // Duyệt từng bài trong chương
+                foreach ($chapter['lessons'] as &$lesson) {
+                    
+                    // MẶC ĐỊNH LÀ KHÔNG KHÓA NỢ
+                    $lesson['is_locked_by_debt'] = false;
+
+                    if ($isOwned) {
+                        // Nếu đang ở level cọc (level 1) và bài này đúng là bài chặn hoặc nằm sau bài chặn
+                        if ($accessLevel == 1 && $lockAtLessonId) {
+                            if ($isLockedFound || (int)$lesson['id'] === (int)$lockAtLessonId) {
+                                $isLockedFound = true; // Kích hoạt cờ chặn
+                                $lesson['is_locked_by_debt'] = true;
+                            }
+                        }
+                    } else {
+                        // Nếu chưa mua, thực hiện logic lọc preview như cũ của anh
+                        // (Hoặc để nguyên nếu anh muốn hiện icon ổ khóa cho khách)
+                    }
+                }
+                unset($lesson); // Quan trọng: Giải phóng tham chiếu vòng lặp con
+
+                // Lọc bài cho khách (isTrial)
+                if (!$isOwned) {
+                    $chapter['lessons'] = array_filter($chapter['lessons'], function($l) {
+                        return $l['is_preview'] == 1;
+                    });
+                }
+
+                $totalLessons += count($chapter['lessons']);
+            }
+        }
+        unset($chapter); // Giải phóng tham chiếu vòng lặp cha
 
         // 5. Xử lý logic bài học (Lọc bài học thử + Tính tổng số bài)
         $totalLessons = 0;
@@ -321,7 +374,8 @@ class CourseController extends BaseController {
             'firstLesson'        => $firstLesson,
             'completedLessonIds' => $completedLessonIds,
             'progressPercent'    => $progressPercent,
-            'totalLessons'       => $totalLessons
+            'totalLessons'       => $totalLessons,
+            'remainingAmount'    => $remainingAmount
         ]);
     }
     
@@ -338,6 +392,25 @@ class CourseController extends BaseController {
         $lessonModel = new LessonModel();
         $lesson = $lessonModel->findById($id);
         if (!$lesson) { http_response_code(404); exit; }
+
+        // --- LOGIC CHẶN THEO THANH TOÁN (MỚI) ---
+        $userId = $_SESSION['user_id'] ?? null;
+        if ($userId) {
+            $courseModel = new CourseModel();
+            // Lấy access_level và lock_at_lesson_id của user cho khóa học chứa bài này
+            $enrollment = $courseModel->getEnrollmentByLessonId($userId, $id);
+            
+            if ($enrollment && $enrollment['access_level'] == 1 && !empty($enrollment['lock_at_lesson_id'])) {
+                // Kiểm tra xem bài hiện tại có phải là bài bị chặn hoặc các bài sau nó không
+                // Chúng ta so sánh dựa trên 'position' (thứ tự) của bài học
+                $isLocked = $lessonModel->checkIfLessonIsLocked($id, $enrollment['lock_at_lesson_id']);
+                
+                if ($isLocked) {
+                    http_response_code(402); // 402: Payment Required
+                    die("Vui lòng hoàn tất học phí để xem bài học này.");
+                }
+            }
+        }
 
         $tokenFromUrl = $_GET['token'] ?? '';
         $savedTokenData = $_SESSION['video_tokens'][$id] ?? null;

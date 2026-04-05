@@ -41,7 +41,7 @@ class PaymentController extends BaseController {
         $name       = $dataRequest['name'] ?? null;
         $phone      = $dataRequest['phone'] ?? null;
         $courseId   = $dataRequest['courseId'] ?? null;
-        $amount     = intval($dataRequest['amount'] ?? 0);
+        $amount     = 5000; //intval($dataRequest['amount'] ?? 0);
         $isRegister = $dataRequest['isRegister'] ?? false;
         $isDebt     = $dataRequest['isDebtPayment'] ?? false;
 
@@ -77,7 +77,9 @@ class PaymentController extends BaseController {
         }
 
         // Nếu là trả nợ, nội dung description nên khác đi để anh dễ quản lý
-        $description = $isDebt ? "THANH TOAN NOT " . $courseId : "DK HOC CNC " . ($phone ?? $userId);
+        $description = $isDebt ? "THANH TOAN NOT " . $courseId : "HOC CNC " . ($dataRequest['phone'] ?? $userId);
+        
+        // Giới hạn độ dài description của PayOS (thường < 25 ký tự)
         $description = substr($description, 0, 25);
 
         // 2. TẠO MÃ ĐƠN HÀNG VÀ LƯU DATABASE (PENDING)
@@ -88,7 +90,8 @@ class PaymentController extends BaseController {
             'user_id'      => $userId,
             'course_id'    => $courseId,
             'amount'       => $amount,
-            'phone_number' => $phone
+            'phone_number' => $phone,
+            'type'         => $isDebt ? 'debt_finish' : 'new_enroll'
         ]);
 
         if (!$dbOrder) {
@@ -100,7 +103,7 @@ class PaymentController extends BaseController {
         $dataPayOS = [
             "orderCode"   => $orderCode,
             "amount"      => $amount, 
-            "description" => $description,
+            "description" => "HOC CNC " . $phone,
             "returnUrl"   => $this->config['return_url'],
             "cancelUrl"   => $this->config['cancel_url']
         ];

@@ -728,6 +728,7 @@
         });
     }
 
+    
 
     // Cứ mỗi 2 phút (120000ms) báo cáo một lần
     setInterval(function() {

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/CourseModel.php';
 require_once __DIR__ . '/../models/CategoryModel.php';
 require_once __DIR__ . '/../models/ChapterModel.php';
 require_once __DIR__ . '/../models/LessonModel.php';
+require_once __DIR__ . '/../models/DocumentModel.php'; 
 
 class CourseController extends BaseController {
 
@@ -49,6 +50,7 @@ class CourseController extends BaseController {
 
         $courseModel = new CourseModel();
         $chapterModel = new ChapterModel();
+        $docModel = new DocumentModel(); // Khởi tạo Model tài liệu
 
         $course = $courseModel->findById($id);
         if (!$course) {
@@ -58,10 +60,14 @@ class CourseController extends BaseController {
         
         // Lấy dữ liệu phân cấp: Chương -> Bài học
         $chaptersWithLessons = $chapterModel->getChaptersWithLessons($id);
+        
+        // Lấy danh sách tài liệu của khóa học này
+        $documents = $docModel->getDocsByCourse($id);
 
         $this->view('admin/courses/edit', [
             'course' => $course,
             'chapters' => $chaptersWithLessons,
+            'documents' => $documents, // Truyền sang View
             'isBackend' => true,
             'activePage' => 'courses',
             'title' => 'Sửa khóa học: ' . $course['name']
@@ -71,59 +77,63 @@ class CourseController extends BaseController {
     public function update($id) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $courseModel = new CourseModel();
-            $oldCourse = $courseModel->findById($id);
+            $docModel = new DocumentModel();
             
-            // Mặc định giữ ảnh cũ
+            $oldCourse = $courseModel->findById($id);
             $imageName = $oldCourse['image'];
+            $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
 
-            // Kiểm tra xem người dùng có chọn file không
+            // --- 1. Xử lý Ảnh đại diện (Giữ nguyên logic của bạn) ---
             if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                
-                // Di chuyển ngược lên 2 cấp từ app/controllers để ra thư mục gốc, sau đó vào public/uploads
-                $uploadDir = dirname(__DIR__, 2) . '/public/uploads/';
-
-                // Kiểm tra để debug (Bạn có thể xóa dòng này sau khi chạy tốt)
-                // die($uploadDir); 
-
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                
-                // 2. Tạo thư mục nếu chưa tồn tại
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-
-                // 3. Xử lý tên file mới để tránh trùng (ví dụ: 171523456_abc.jpg)
                 $fileTmpPath = $_FILES['image']['tmp_name'];
-                $fileName = $_FILES['image']['name'];
-                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $newFileName = time() . '_' . md5($fileName) . '.' . $fileExtension;
-
-                // 4. Di chuyển file từ bộ nhớ tạm vào thư mục uploads
-                $dest_path = $uploadDir . $newFileName;
-
-                if (move_uploaded_file($fileTmpPath, $dest_path)) {
-                    // Upload thành công -> Xóa ảnh cũ trên server (tránh rác)
+                $newFileName = time() . '_thumb_' . md5($_FILES['image']['name']) . '.' . pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+                if (move_uploaded_file($fileTmpPath, $uploadDir . $newFileName)) {
                     if ($imageName && $imageName != 'default.jpg' && file_exists($uploadDir . $imageName)) {
                         unlink($uploadDir . $imageName);
                     }
-                    $imageName = $newFileName; // Cập nhật tên file mới để lưu vào DB
+                    $imageName = $newFileName;
                 }
             }
 
-            // 5. Chuẩn bị dữ liệu để lưu vào Database
-            $slug = $this->createSlug($_POST['name']);
-            //echo "<pre>"; print_r($_POST); echo "</pre>"; // Debug dữ liệu trước khi lưu
-            //die("Debugging..."); // Dừng thực thi để xem dữ liệu
+            // --- 2. Xử lý TÀI LIỆU ĐÍNH KÈM (Upload nhiều file) ---
+            if (!empty($_FILES['documents']['name'][0])) {
+                $docDir = $uploadDir . 'documents/'; // Lưu vào public/uploads/documents/
+                if (!is_dir($docDir)) mkdir($docDir, 0777, true);
+
+                foreach ($_FILES['documents']['name'] as $key => $val) {
+                    if ($_FILES['documents']['error'][$key] === UPLOAD_ERR_OK) {
+                        $originalName = $_FILES['documents']['name'][$key];
+                        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                        $tmpName = $_FILES['documents']['tmp_name'][$key];
+                        $size = $_FILES['documents']['size'][$key];
+                        
+                        // Tạo tên file an toàn để lưu trên server
+                        $savedFileName = time() . '_' . md5($originalName) . '.' . $ext;
+                        
+                        if (move_uploaded_file($tmpName, $docDir . $savedFileName)) {
+                            // Lưu thông tin vào Database
+                            $docModel->addDocument([
+                                'course_id' => $id,
+                                'file_name' => $originalName,
+                                'file_path' => 'public/uploads/documents/' . $savedFileName,
+                                'file_size' => $this->formatSizeUnits($size),
+                                'file_type' => $ext
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // --- 3. Lưu thông tin khóa học (Giữ nguyên logic của bạn) ---
             $data = [
                 'name'  => $_POST['name'],
-                'slug'  => $slug,
-                'price' => $_POST['price'],
+                'slug'  => $this->createSlug($_POST['name']),
+                'price' => str_replace('.', '', $_POST['price']), // Bỏ dấu chấm nếu có
                 'summary'     => $_POST['summary'] ?? '',
                 'description' => $_POST['description'] ?? '',
+                'status' => $_POST['status'] ?? 1,
                 'position' => $_POST['position'] ?? 0,
-                'image' => $imageName // Tên file (mới hoặc cũ)
+                'image' => $imageName
             ];
 
             if ($courseModel->updateCourse($id, $data)) {
@@ -133,6 +143,42 @@ class CourseController extends BaseController {
             }
             exit;
         }
+    }
+
+    // Hàm hỗ trợ định dạng dung lượng file
+    private function formatSizeUnits($bytes) {
+        if ($bytes >= 1073741824) { $bytes = number_format($bytes / 1073741824, 2) . ' GB'; }
+        elseif ($bytes >= 1048576) { $bytes = number_format($bytes / 1048576, 2) . ' MB'; }
+        elseif ($bytes >= 1024) { $bytes = number_format($bytes / 1024, 2) . ' KB'; }
+        else { $bytes = $bytes . ' bytes'; }
+        return $bytes;
+    }
+
+    public function deleteDoc($id) {
+        header('Content-Type: application/json');
+        $docModel = new DocumentModel();
+        
+        // 1. Tìm thông tin file để xóa file vật lý trên ổ cứng
+        $doc = $docModel->findById($id);
+        
+        if ($doc) {
+            $filePath = $_SERVER['DOCUMENT_ROOT'] . '/' . $doc['file_path'];
+            
+            // Xóa file vật lý
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // 2. Xóa trong Database
+            if ($docModel->deleteDocument($id)) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Lỗi khi xóa trong Database.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Tài liệu không tồn tại.']);
+        }
+        exit;
     }
 
     // Hàm lưu khóa học (Kết hợp xử lý Slug và Upload ảnh của bạn)
@@ -211,72 +257,131 @@ class CourseController extends BaseController {
     // ==========================================
     // CÁC HÀM XEM VIDEO & STREAM (GIỮ NGUYÊN)
     // ==========================================
-
     public function learning($slug) {
-        // 1. Khởi tạo các Model cần thiết
+        // 1. Khởi tạo Model
         $courseModel = new CourseModel();
         $chapterModel = new ChapterModel();
         $lessonModel = new LessonModel();
+        $docModel = new DocumentModel(); 
 
-        // 2. Lấy thông tin khóa học theo slug
+        // 2. Lấy thông tin khóa học
         $course = $courseModel->findBySlug($slug);
-        if (!$course) {
-            die("Khóa học không tồn tại!");
-        }
+        if (!$course) die("Khóa học không tồn tại!");
 
-        // 3. Kiểm tra quyền sở hữu
         $userId = $_SESSION['user_id'] ?? null;
-        $isOwned = false;
-        
-        if ($userId) {
-            // Sử dụng hàm checkOwnership chúng ta đã viết trước đó
-            $isOwned = $courseModel->checkOwnership($userId, $course['id']);
+        $isOwned = $userId ? $courseModel->checkOwnership($userId, $course['id']) : false;
+
+        // --- MỚI: Lấy thông tin nợ và điểm chặn ---
+        $accessLevel = 2; // Mặc định mở hết
+        $lockAtLessonId = null;
+        $remainingAmount = 0;
+
+        if ($isOwned) {
+            $enrollment = $courseModel->getEnrollmentDetails($userId, $course['id']);
+            //echo '<pre>';
+            //print_r($enrollment);
+            //echo '</pre>';die;
+            if ($enrollment) {
+                $accessLevel = $enrollment['access_level'];
+                $lockAtLessonId = $enrollment['lock_at_lesson_id'];
+                $remainingAmount = $enrollment['remaining_amount'];
+            }
+            $documents = $docModel->getDocsByCourse($course['id']);
+        } else {
+            $documents = [];
         }
 
-        // 4. Lấy danh sách chương và bài học
+        // 4. Lấy dữ liệu bài học
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
 
-        $firstLesson = null;
-        if (!empty($chapters)) {
-            // Lấy chương đầu tiên
-            $firstChapter = reset($chapters); 
-            if (!empty($firstChapter['lessons'])) {
-                // Lấy bài học đầu tiên của chương đó
-                $firstLesson = reset($firstChapter['lessons']); 
+        // 5. Xử lý logic bài học (Inject biến khóa nợ phí)
+        $totalLessons = 0;
+        $isLockedFound = false; // Biến cờ: Một khi đã gặp bài chặn, tất cả bài sau đều khóa
+
+        foreach ($chapters as &$chapter) {
+            if (!empty($chapter['lessons'])) {
+                
+                // Duyệt từng bài trong chương
+                foreach ($chapter['lessons'] as &$lesson) {
+                    
+                    // MẶC ĐỊNH LÀ KHÔNG KHÓA NỢ
+                    $lesson['is_locked_by_debt'] = false;
+
+                    if ($isOwned) {
+                        // Nếu đang ở level cọc (level 1) và bài này đúng là bài chặn hoặc nằm sau bài chặn
+                        if ($accessLevel == 1 && $lockAtLessonId) {
+                            if ($isLockedFound || (int)$lesson['id'] === (int)$lockAtLessonId) {
+                                $isLockedFound = true; // Kích hoạt cờ chặn
+                                $lesson['is_locked_by_debt'] = true;
+                            }
+                        }
+                    } else {
+                        // Nếu chưa mua, thực hiện logic lọc preview như cũ của anh
+                        // (Hoặc để nguyên nếu anh muốn hiện icon ổ khóa cho khách)
+                    }
+                }
+                unset($lesson); // Quan trọng: Giải phóng tham chiếu vòng lặp con
+
+                // Lọc bài cho khách (isTrial)
+                if (!$isOwned) {
+                    $chapter['lessons'] = array_filter($chapter['lessons'], function($l) {
+                        return $l['is_preview'] == 1;
+                    });
+                }
+
+                $totalLessons += count($chapter['lessons']);
             }
         }
-        
-        // 5. Nếu KHÔNG sở hữu, lọc ra chỉ những bài cho phép học thử
-        if (!$isOwned) {
-            foreach ($chapters as &$chapter) {
-                $chapter['lessons'] = array_filter($chapter['lessons'], function($lesson) {
-                    return $lesson['is_preview'] == 1; // Chỉ giữ lại bài có is_preview = 1
-                });
+        unset($chapter); // Giải phóng tham chiếu vòng lặp cha
+
+        // 5. Xử lý logic bài học (Lọc bài học thử + Tính tổng số bài)
+        $totalLessons = 0;
+        foreach ($chapters as &$chapter) {
+            if (!empty($chapter['lessons'])) {
+                // Nếu chưa mua, lọc bỏ các bài không phải preview
+                if (!$isOwned) {
+                    $chapter['lessons'] = array_filter($chapter['lessons'], function($lesson) {
+                        return $lesson['is_preview'] == 1;
+                    });
+                }
+                $totalLessons += count($chapter['lessons']);
+            }
+        }
+        unset($chapter); // Giải phóng tham chiếu
+
+        // 6. Tính toán tiến độ học tập
+        $completedLessonIds = ($userId && $isOwned) ? $lessonModel->getCompletedLessonIds($userId, $course['id']) : [];
+        $progressPercent = ($totalLessons > 0) ? round((count($completedLessonIds) / $totalLessons) * 100) : 0;
+
+        // 7. Xác định bài học đầu tiên để tự động phát
+        $firstLesson = null;
+        foreach ($chapters as $chapter) {
+            if (!empty($chapter['lessons'])) {
+                $firstLesson = reset($chapter['lessons']);
+                break; // Tìm thấy bài đầu tiên rồi thì thoát vòng lặp ngay
             }
         }
 
-        // Lấy danh sách ID bài học đã hoàn thành
-        $completedLessonIds = [];
-        if ($userId) {
-            $completedLessonIds = $lessonModel->getCompletedLessonIds($userId, $course['id']);
-        }
-        
-        
-        // 6. Truyền dữ liệu sang View
+        // 8. Trả dữ liệu về View
         $this->view('frontend/course/learning', [
-            'course'   => $course,
-            'chapters' => $chapters,
-            'isOwned'  => $isOwned,
-            'isTrial'  => !$isOwned, // Nếu chưa mua thì mặc định là đang ở chế độ học thử
-            'firstLesson' => $firstLesson,
-            'completedLessonIds' => $completedLessonIds
+            'course'             => $course,
+            'chapters'           => $chapters,
+            'documents'          => $documents, 
+            'isOwned'            => $isOwned,
+            'isTrial'            => !$isOwned,
+            'firstLesson'        => $firstLesson,
+            'completedLessonIds' => $completedLessonIds,
+            'progressPercent'    => $progressPercent,
+            'totalLessons'       => $totalLessons,
+            'remainingAmount'    => $remainingAmount
         ]);
     }
+    
 
     public function stream($id) {
+        // 1. Kiểm tra quyền của học viên (Giữ nguyên logic cũ của bạn)
         $tokenFromUrl = $_GET['token'] ?? '';
         $savedTokenData = $_SESSION['video_tokens'][$id] ?? null;
-        session_write_close(); // Quan trọng: Đóng session ngay sau khi lấy token để tránh lock session khi load video
         if (!$savedTokenData || $savedTokenData['token'] !== $tokenFromUrl || time() > $savedTokenData['expires']) {
             http_response_code(403);
             exit;
@@ -286,58 +391,91 @@ class CourseController extends BaseController {
         $lesson = $lessonModel->findById($id);
         if (!$lesson) { http_response_code(404); exit; }
 
-        // 1. Lấy Access Token
-        $configFile = __DIR__ . "/../../app/config/google_drive.json";
-        $config = json_decode(file_get_contents($configFile), true);
-        $accessToken = $this->getGoogleAccessToken($config['client_id'], $config['client_secret'], $config['refresh_token']);
-
-        $fileId = $lesson['link_video'];
-        $driveUrl = "https://www.googleapis.com/drive/v3/files/{$fileId}?alt=media";
-
-        // 2. Thiết lập Header để hỗ trợ Tua (Range) và VideoJS
-        $headers = ["Authorization: Bearer $accessToken"];
-        if (isset($_SERVER['HTTP_RANGE'])) {
-            $headers[] = 'Range: ' . $_SERVER['HTTP_RANGE'];
-        }
-
-        // 3. Sử dụng cURL để Stream trực tiếp (Không tốn RAM)
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $driveUrl);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_BUFFERSIZE, 1024 * 16); // Tăng buffer lên 16KB để mượt hơn
-
-        // ✅ PHẦN QUAN TRỌNG: Xử lý Header và mã 206 để hỗ trợ tua video
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($ch, $headerLine) {
-            $h = strtolower($headerLine);
+        // --- LOGIC CHẶN THEO THANH TOÁN (MỚI) ---
+        $userId = $_SESSION['user_id'] ?? null;
+        if ($userId) {
+            $courseModel = new CourseModel();
+            // Lấy access_level và lock_at_lesson_id của user cho khóa học chứa bài này
+            $enrollment = $courseModel->getEnrollmentByLessonId($userId, $id);
             
-            // 1. Chuyển tiếp mã trạng thái (200, 206, v.v.)
-            if (preg_match('/^http\/(?:1.1|2) (\d+)/', $h, $matches)) {
-                http_response_code(intval($matches[1]));
+            if ($enrollment && $enrollment['access_level'] == 1 && !empty($enrollment['lock_at_lesson_id'])) {
+                // Kiểm tra xem bài hiện tại có phải là bài bị chặn hoặc các bài sau nó không
+                // Chúng ta so sánh dựa trên 'position' (thứ tự) của bài học
+                $isLocked = $lessonModel->checkIfLessonIsLocked($id, $enrollment['lock_at_lesson_id']);
+                
+                if ($isLocked) {
+                    http_response_code(402); // 402: Payment Required
+                    die("Vui lòng hoàn tất học phí để xem bài học này.");
+                }
             }
-
-            // 2. Chuyển tiếp các header hỗ trợ phân đoạn dữ liệu
-            if (strpos($h, 'content-type:') !== false || 
-                strpos($h, 'content-length:') !== false || 
-                strpos($h, 'content-range:') !== false || 
-                strpos($h, 'accept-ranges:') !== false ||
-                strpos($h, 'cache-control:') !== false) {
-                header($headerLine);
-            }
-            return strlen($headerLine);
-        });
-
-        // Tắt nén zlib nếu có để tránh lỗi tranh chấp header
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
         }
 
-        while (ob_get_level()) ob_end_clean();
+        $tokenFromUrl = $_GET['token'] ?? '';
+        $savedTokenData = $_SESSION['video_tokens'][$id] ?? null;
+        session_write_close(); 
 
-        curl_exec($ch);
-        curl_close($ch);
+        if (!$savedTokenData || $savedTokenData['token'] !== $tokenFromUrl || time() > $savedTokenData['expires']) {
+            http_response_code(403);
+            die("Truy cập bị chặn.");
+        }
+        // 1. Cấu hình Bunny của bạn
+        $libraryId = "614514"; 
+        $apiKey    = "d651e95f-6cf9-48f2-a5aabac225c4-18a1-4962"; 
+        $videoId   = $lesson['link_video'];
+        $pullZoneHost = "vz-2f4a27cf-8a9.b-cdn.net"; 
+
+        // 2. Tạo Link gốc và Token
+        $expires = time() + 3600; 
+        $token = md5($apiKey . $videoId . $expires);
+        $masterUrl = "https://{$pullZoneHost}/{$videoId}/playlist.m3u8?token={$token}&expires={$expires}";
+        
+        // Đường dẫn gốc để nối link tuyệt đối
+        $baseUrl = "https://{$pullZoneHost}/{$videoId}/";
+
+        // 3. Đọc nội dung file Master từ Bunny
+        $content = file_get_contents($masterUrl);
+        if (!$content) { http_response_code(404); die(); }
+
+        $lines = explode("\n", $content);
+        $filteredLines = [];
+        $skipNext = false;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            // Lọc chất lượng thấp (< 720p)
+            if (strpos($line, 'RESOLUTION=') !== false) {
+                preg_match('/RESOLUTION=\d+x(\d+)/', $line, $matches);
+                $height = isset($matches[1]) ? (int)$matches[1] : 0;
+                if ($height > 0 && $height < 720) {
+                    $skipNext = true; 
+                    continue;
+                }
+            }
+
+            if ($skipNext) {
+                $skipNext = false;
+                continue;
+            }
+
+            // QUAN TRỌNG: Biến link tương đối thành tuyệt đối
+            // Nếu dòng không bắt đầu bằng '#' và không có 'http', thì đó là link file con
+            if (strpos($line, '#') !== 0 && strpos($line, 'http') !== 0) {
+                // Nối thêm baseUrl và truyền lại token/expires để các file con cũng có quyền truy cập
+                $line = $baseUrl . $line . (strpos($line, '?') !== false ? '&' : '?') . "token={$token}&expires={$expires}";
+            }
+
+            $filteredLines[] = $line;
+        }
+
+        // 4. Trả về cho VideoJS
+        header('Content-Type: application/x-mpegURL');
+        header('Access-Control-Allow-Origin: *'); // Tránh lỗi CORS
+        echo implode("\n", $filteredLines);
         exit;
+
+        
     }
     
 
@@ -437,11 +575,13 @@ class CourseController extends BaseController {
         // Lấy thêm danh sách chương và bài học thuộc khóa học này (nếu cần)
         $chapterModel = new ChapterModel();
         $chapters = $chapterModel->getChaptersWithLessons($course['id']);
+        $description = $course['summary'] ?? '';
         
         $this->view('frontend/course/detail', [
             'course' => $course,
             'chapters' => $chapters,
             'title' => $course['name'],
+            'meta_description' => $description,
             'isOwned' => $isOwned,
             'isLoggedIn' => !empty($userId)
         ]);

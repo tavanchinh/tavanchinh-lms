@@ -227,4 +227,28 @@ public function updateCourse($id, $data) {
         
         return true; // Đã có rồi thì coi như thành công
     }
+
+
+    public function getEnrollmentByLessonId($userId, $lessonId) {
+        $sql = "SELECT uc.access_level, uc.lock_at_lesson_id 
+                FROM user_courses uc
+                JOIN lessons l ON l.course_id = uc.course_id
+                WHERE uc.user_id = ? AND l.id = ? LIMIT 1";
+        return $this->query($sql, [$userId, $lessonId])->fetch();
+    }
+
+    /**
+     * Lấy thông tin chi tiết đăng ký khóa học của user
+     * Bao gồm: Mức độ truy cập, bài học bị chặn, và số tiền nợ
+     */
+    public function getEnrollmentDetails($userId, $courseId) {
+        $sql = "SELECT user_id, access_level, lock_at_lesson_id, remaining_amount 
+                FROM user_courses 
+                WHERE user_id = ? AND course_id = ? LIMIT 1";
+        
+        // Sử dụng phương thức query của Base giữ nguyên cấu trúc hệ thống của anh
+        $result = $this->query($sql, [$userId, $courseId])->fetch();
+        
+        return $result ? $result : null;
+    }
 }

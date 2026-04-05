@@ -311,4 +311,17 @@ class LessonModel extends Database {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)($result['total'] ?? 0);
     }
+
+
+    public function checkIfLessonIsLocked($currentLessonId, $lockAtLessonId) {
+        // Lấy position của 2 bài học
+        $sql = "SELECT id, position FROM lessons WHERE id IN (?, ?)";
+        $lessons = $this->query($sql, [$currentLessonId, $lockAtLessonId])->fetchAll();
+        
+        $pos = [];
+        foreach ($lessons as $l) { $pos[$l['id']] = $l['position']; }
+        
+        // Nếu bài đang xem có vị trí >= bài mốc thì bị khóa
+        return ($pos[$currentLessonId] >= $pos[$lockAtLessonId]);
+    }
 }

@@ -33,28 +33,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                 </div>
             <?php endif; ?>
-            <?php if(isset($_GET['error'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <?php 
-                        // Hiển thị nội dung lỗi dựa trên mã lỗi truyền về
-                        switch($_GET['error']) {
-                            case 'password_mismatch':
-                                echo 'Mật khẩu xác nhận không khớp, vui lòng kiểm tra lại!';
-                                break;
-                            case 'wrong_password':
-                                echo 'Mật khẩu hiện tại không chính xác!';
-                                break;
-                            case 'password_too_short':
-                                echo 'Mật khẩu quá ngắn!';
-                                break;
-                            default:
-                                echo 'Đã có lỗi xảy ra, vui lòng thử lại sau!';
-                        }
-                    ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
-            <?php endif; ?>
 
             <div class="tab-content">
                 <div class="tab-pane fade show <?= $activeTab == 'courses' ? 'show active' : '' ?>" id="tab-courses">
@@ -84,7 +62,18 @@
                                                     <h5 class="fw-bold mb-0 text-dark pe-3">
                                                         <?= htmlspecialchars($course['name']) ?>
                                                     </h5>
-                                                    <a href="/<?= $course['slug'] ?>" class="btn btn-primary rounded-pill px-4 btn-sm fw-bold">Học tiếp</a>
+                                                    <a href="/learning/<?= $course['slug'] ?>" class="btn btn-primary rounded-pill px-4 btn-sm fw-bold">
+                                                        <?php 
+                                                            $percent = $course['progress_percent'];
+                                                            if ($percent == 0) {
+                                                                echo 'Vào học';
+                                                            } elseif ($percent == 100) {
+                                                                echo 'Ôn tập';
+                                                            } else {
+                                                                echo 'Học tiếp';
+                                                            }
+                                                        ?>
+                                                    </a>
                                                 </div>
                                                 
                                                 <p class="text-muted small mb-3">
@@ -138,7 +127,7 @@
                             <h4 class="fw-bold mb-0">Cài đặt tài khoản</h4>
                         </div>
                         
-                        <form action="/cap-nhat-thong-tin" id="form_update_profile" method="POST">
+                        <form action="/profile/update" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold small">Họ và tên</label>
@@ -153,32 +142,9 @@
                                     <input type="email" class="form-control bg-light rounded-3" value="<?= htmlspecialchars($user['email']) ?>" readonly>
                                 </div>
                                 <div class="col-12">
-                                    <hr class="my-4 opacity-10">
-                                    
-                                    <div class="form-check form-switch mb-3 d-flex align-items-center gap-2">
-                                        <input class="form-check-input" type="checkbox" id="enableChangePassword" 
-                                            style="cursor: pointer; width: 2.5rem; height: 1.25rem; margin-top: 0;">
-                                        <label class="form-check-label fw-bold text-primary small mb-0" for="enableChangePassword" style="cursor: pointer;">
-                                            Thay đổi mật khẩu tài khoản
-                                        </label>
-                                    </div>
-
-                                    <div id="passwordFields" style="display: none;">
-                                        <div class="row g-3 animate__animated animate__fadeInUp">
-                                            <div class="col-md-6">
-                                                <label class="form-label fw-bold small">Mật khẩu mới</label>
-                                                <input type="password" name="new_password" id="new_password" 
-                                                    class="form-control rounded-3" placeholder="Tối thiểu 6 ký tự">
-                                                <div id="passwordStrength" class="small mt-1" style="display: none;"></div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label fw-bold small">Xác nhận mật khẩu mới</label>
-                                                <input type="password" name="confirm_password" id="confirm_password" 
-                                                    class="form-control rounded-3" placeholder="Nhập lại mật khẩu mới">
-                                                <div id="passwordError" class="text-danger small mt-1" style="display: none;">Mật khẩu không khớp!</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <hr class="my-3 opacity-10">
+                                    <label class="form-label fw-bold text-primary small">Mật khẩu mới (Bỏ trống nếu giữ nguyên)</label>
+                                    <input type="password" name="new_password" class="form-control rounded-3" placeholder="••••••••">
                                 </div>
                                 <div class="col-12 mt-4">
                                     <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow-sm py-2">
@@ -201,88 +167,6 @@
         });
         card.addEventListener('mouseleave', () => {
             card.querySelector('.opacity-hover').classList.remove('opacity-100');
-        });
-    });
-
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const passwordSwitch = document.getElementById('enableChangePassword');
-        const passwordFields = document.getElementById('passwordFields');
-        const newPass = document.getElementById('new_password');
-        const strengthText = document.getElementById('passwordStrength');
-        const confirmPass = document.getElementById('confirm_password');
-        const passError = document.getElementById('passwordError');
-        const profileForm = document.getElementById('form_update_profile');
-
-        // 1. Xử lý Ẩn/Hiện khi gạt Switch
-        passwordSwitch.addEventListener('change', function() {
-            if (this.checked) {
-                passwordFields.style.display = 'block';
-                newPass.setAttribute('required', 'required');
-                confirmPass.setAttribute('required', 'required');
-            } else {
-                passwordFields.style.display = 'none';
-                newPass.removeAttribute('required');
-                confirmPass.removeAttribute('required');
-                // Xóa giá trị đã nhập khi tắt switch
-                newPass.value = '';
-                confirmPass.value = '';
-                passError.style.display = 'none';
-            }
-        });
-
-        // Hàm kiểm tra độ mạnh
-        newPass.addEventListener('input', function() {
-            const val = this.value;
-            if (val.length === 0) {
-                strengthText.style.display = 'none';
-                return;
-            }
-
-            strengthText.style.display = 'block';
-            
-            if (val.length < 6) {
-                strengthText.innerHTML = '<i class="bi bi-x-circle-fill"></i> Quá ngắn (tối thiểu 6 ký tự)';
-                strengthText.className = 'small mt-1 text-danger';
-                newPass.classList.add('is-invalid');
-            } else if (val.length < 10) {
-                strengthText.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Độ mạnh: Trung bình';
-                strengthText.className = 'small mt-1 text-warning';
-                newPass.classList.remove('is-invalid');
-                newPass.classList.add('is-valid');
-            } else {
-                strengthText.innerHTML = '<i class="bi bi-check-circle-fill"></i> Độ mạnh: Rất tốt';
-                strengthText.className = 'small mt-1 text-success';
-                newPass.classList.remove('is-invalid');
-                newPass.classList.add('is-valid');
-            }
-        });
-
-        // Chặn submit nếu bật switch mà mật khẩu < 6 ký tự
-        profileForm.addEventListener('submit', function(e) {
-            if (passwordSwitch.checked && newPass.value.length < 6) {
-                e.preventDefault();
-                alert('Mật khẩu phải từ 6 ký tự trở lên anh nhé!');
-                newPass.focus();
-            }
-        });
-
-        // 2. Kiểm tra mật khẩu khớp nhau trước khi submit
-        profileForm.addEventListener('submit', function(e) {
-            if (passwordSwitch.checked) {
-                if (newPass.value !== confirmPass.value) {
-                    e.preventDefault(); // Dừng gửi form
-                    passError.style.display = 'block';
-                    confirmPass.classList.add('is-invalid');
-                    confirmPass.focus();
-                }
-            }
-        });
-
-        // 3. Ẩn thông báo lỗi khi đang gõ lại
-        confirmPass.addEventListener('input', function() {
-            passError.style.display = 'none';
-            confirmPass.classList.remove('is-invalid');
         });
     });
     </Script>

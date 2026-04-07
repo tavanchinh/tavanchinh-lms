@@ -31,7 +31,17 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css?v=1.2">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TZ8EXCEZ63"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-TZ8EXCEZ63');
+    </script>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg sticky-top mb-4">
         <div class="container">
@@ -47,7 +57,7 @@
                 <ul class="navbar-nav ms-auto align-items-center">
                     <?php $current_route = $_SERVER['REQUEST_URI']; ?>
                     <li class="nav-item"><a class="nav-link <?= $current_route === '/' ? 'active-custom' : '' ?>" href="/">Trang chủ</a></li>
-                    
+                    <li class="nav-item"><a class="nav-link <?= $current_route === '/tai-lieu' ? 'active-custom' : '' ?>" href="/tai-lieu">Tài liệu</a></li>
                     <?php if (isset($currentUser) && $currentUser !== null): ?>
     
                         <li class="nav-item">

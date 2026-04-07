@@ -25,12 +25,10 @@ class HomeController extends BaseController {
 
     public function documentation() {
         
-        $courseModel = new CourseModel();
-        $courses = $courseModel->getAllActive();
+        
 
         // Truyền dữ liệu vào view home
         $this->view('frontend/home/documentation', [
-            'courses' => $courses,
             'meta_description' => 'Tài liệu hướng dẫn sử dụng hệ thống quản lý học viên và khóa học CNC.'
             ]);
     }

@@ -108,12 +108,11 @@ public function updateCourse($id, $data) {
 
         if ($exists) return false; 
 
-        // 2. Lưu trực tiếp số tiền nộp vào trường price_at_purchase
-        // (Lưu ý: Anh nên giữ cả cột enrolled_at để biết ngày họ nộp tiền)
-        $sql = "INSERT INTO user_courses (user_id, course_id, price_at_purchase, enrolled_at) 
-                VALUES (?, ?, ?, NOW())";
-        
-        return $this->query($sql, [$userId, $courseId, $paidAmount]);
+        $accessData = $this->calculateAccessLevel($courseId, $cleanAmount);
+        $sql = "INSERT INTO user_courses (user_id, course_id, price_at_purchase, remaining_amount, access_level, lock_at_lesson_id, enrolled_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        return $this->query($sql, [$userId, $courseId, $cleanAmount, $accessData['remaining_amount'], $accessData['access_level'], $accessData['lock_at_lesson_id']]);
+
     }
 
     
@@ -136,20 +135,28 @@ public function updateCourse($id, $data) {
             $rawAmount = $paidAmounts[$courseId] ?? 0;
             $cleanAmount = (int)preg_replace('/[^0-9]/', '', $rawAmount);
 
-            // Kiểm tra xem bản ghi đã tồn tại chưa
+            // --- GỌI LOGIC TÍNH TOÁN TẠI ĐÂY ---
+            $accessData = $this->calculateAccessLevel($courseId, $cleanAmount);
+
             $check = $this->query("SELECT id FROM user_courses WHERE user_id = ? AND course_id = ?", [$userId, $courseId])->fetch();
 
             if ($check) {
-                // ĐÃ CÓ: Chỉ cập nhật tiền, KHÔNG chạm vào enrolled_at
+                // CẬP NHẬT: Thêm cả access_level và remaining_amount
                 $this->query(
-                    "UPDATE user_courses SET price_at_purchase = ? WHERE user_id = ? AND course_id = ?", 
-                    [$cleanAmount, $userId, $courseId]
+                    "UPDATE user_courses SET 
+                        price_at_purchase = ?, 
+                        remaining_amount = ?, 
+                        access_level = ?, 
+                        lock_at_lesson_id = ? 
+                    WHERE user_id = ? AND course_id = ?", 
+                    [$cleanAmount, $accessData['remaining_amount'], $accessData['access_level'], $accessData['lock_at_lesson_id'], $userId, $courseId]
                 );
             } else {
-                // CHƯA CÓ: Thêm mới hoàn toàn (enrolled_at sẽ lấy CURRENT_TIMESTAMP mặc định)
+                // THÊM MỚI: Đầy đủ các trường
                 $this->query(
-                    "INSERT INTO user_courses (user_id, course_id, price_at_purchase, enrolled_at) VALUES (?, ?, ?, NOW())", 
-                    [$userId, $courseId, $cleanAmount]
+                    "INSERT INTO user_courses (user_id, course_id, price_at_purchase, remaining_amount, access_level, lock_at_lesson_id, enrolled_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, NOW())", 
+                    [$userId, $courseId, $cleanAmount, $accessData['remaining_amount'], $accessData['access_level'], $accessData['lock_at_lesson_id']]
                 );
             }
         }
@@ -176,6 +183,35 @@ public function updateCourse($id, $data) {
         $stmt->execute([$userId]);
         // Trả về mảng phẳng chỉ chứa ID: [1, 4, 7]
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    private function calculateAccessLevel($courseId, $paidAmount) {
+        // 1. Lấy giá gốc khóa học
+        $course = $this->query("SELECT price FROM courses WHERE id = ?", [$courseId])->fetch();
+        $totalPrice = $course ? (int)$course['price'] : 0;
+
+        $remainingAmount = $totalPrice - $paidAmount;
+        
+        if ($remainingAmount <= 0) {
+            return [
+                'access_level' => 2,
+                'lock_at_lesson_id' => null,
+                'remaining_amount' => 0
+            ];
+        }
+
+        $courseLockMap = [
+            4 => 11,  // Khóa ID 4: Chặn từ bài 11
+            5 => 18, // Khóa ID 5: Chặn từ bài 18
+            7 => 25,  // Khóa ID 7: Chặn từ bài 25
+        ];
+        
+        return [
+            'access_level' => 1,
+            'lock_at_lesson_id' => $courseLockMap[$courseId] ??  null,
+            'remaining_amount' => $remainingAmount
+        ];
     }
 
     public function findBySlug($slug) {

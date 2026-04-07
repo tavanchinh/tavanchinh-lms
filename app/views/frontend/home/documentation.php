@@ -9,15 +9,15 @@
         [
             "title"    => "RT Tool Plugin",
             "desc"     => "Công cụ xoay vân gỗ, xoay đối tượng nhanh chóng",
-            "image"    => "/uploads/default-image.jpg",
+            "image"    => "/uploads/rt.png",
             "version"  => "v1.1.0",
-            "link"     => "URL_FILE_CUA_BAN_1",
+            "link"     => "/uploads/documents/rt_sign.rbz",
             "ga_label" => "RT-Plugin"
         ],
         [
             "title"    => "FitC Plugin",
             "desc"     => "Tối ưu quy trình xuất file với ABF",
-            "image"    => "/uploads/default-image.jpg",
+            "image"    => "/uploads/fitc.png",
             "version"  => "v1.0.8",
             "link"     => "https://fitc.vn/",
             "ga_label" => "FitC-Plugin"
@@ -41,7 +41,7 @@
             "ga_label" => "SketchUp 2023"
         ],
         [
-            "title"    => "Aspire Tiếng Việt",
+            "title"    => "Aspire Tiếng Việt (pass:123456)",
             "desc"     => "Phần mêm setup dao cho máy CNC, hỗ trợ tiếng Việt, dễ sử dụng",
             "image"    => "/uploads/Aspire.jpg",
             "version"  => "9.5.14",

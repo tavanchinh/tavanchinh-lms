@@ -23,36 +23,44 @@ class AuthController extends BaseController {
     }
 
     public function login() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        $remember = isset($_POST['remember']); 
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $remember = isset($_POST['remember']); 
 
-        $userModel = new UserModel();
-        $user = $userModel->findByEmail($email);
+            $userModel = new UserModel();
+            $user = $userModel->findByEmail($email);
 
-        if ($user && password_verify($password, $user['password'])) {
-            // 1. Lưu Session như cũ
-            $_SESSION['user_id']   = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
-            $_SESSION['user_phone_number'] = $user['phone_number'];
+            if ($user && password_verify($password, $user['password'])) {
+                // ✅ TẠO SESSION ID MỚI ĐỂ ĐẢM BẢO TÍNH DUY NHẤT
+                session_regenerate_id(true);
+                $newSessionId = session_id();
 
-            // 2. Xử lý Ghi nhớ đăng nhập (Cookie)
-            if ($remember) {
-                $expiry = time() + (7 * 24 * 60 * 60); // 7 ngày
-                setcookie('remember_user', $user['id'], $expiry, "/");
-                // Tạo một token bảo mật dựa trên hash password (nếu đổi pass, token này sẽ hỏng -> an toàn)
-                setcookie('remember_token', md5($user['password']), $expiry, "/");
+                // 1. Lưu Session như cũ
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_phone_number'] = $user['phone_number'];
+
+                // ✅ 2. CẬP NHẬT SESSION ID MỚI VÀO DATABASE
+                // Bước này sẽ làm các máy khác (đang cầm Session ID cũ) bị hiện cảnh báo
+                $userModel->updateLastSession($user['id'], $newSessionId);
+
+                // 3. Xử lý Ghi nhớ đăng nhập (Cookie)
+                if ($remember) {
+                    $expiry = time() + (7 * 24 * 60 * 60); // 7 ngày
+                    setcookie('remember_user', $user['id'], $expiry, "/");
+                    setcookie('remember_token', md5($user['password']), $expiry, "/");
+                }
+
+                $userModel->writeAccessLog($user['id'], 'login'); 
+                header("Location: /");
+                exit;
+            } else {
+                $this->view('auth/login', ['error' => 'Email hoặc mật khẩu không đúng!']);
             }
-            $userModel->writeAccessLog($user['id'], 'login'); // Ghi log đăng nhập
-            header("Location: /");
-            exit;
-        } else {
-            $this->view('auth/login', ['error' => 'Email hoặc mật khẩu không đúng!']);
         }
     }
-}
 
     
 

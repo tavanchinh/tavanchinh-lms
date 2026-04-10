@@ -251,11 +251,32 @@ class UserController extends BaseController {
         }
     }
 
+
     public function keepAlive() {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        
         if (isset($_SESSION['user_id'])) {
             $userModel = new UserModel();
-            // Cập nhật hoặc chèn một log loại 'heartbeat' hoặc 'online'
-            $userModel->updateHeartbeat($_SESSION['user_id']);
+            $userId = $_SESSION['user_id'];
+            $currentSessionId = session_id();
+
+            $user = $userModel->findById($userId);
+
+            if ($user && isset($user['last_session_id']) && $user['last_session_id'] !== $currentSessionId) {
+                
+                // Ghi log lại để Admin theo dõi
+                $userModel->writeSecurityLog([
+                    'user_id' => $userId,
+                    'ip_address' => $_SERVER['REMOTE_ADDR'],
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                    'old_session_id' => $currentSessionId,
+                    'new_session_id' => $user['last_session_id']
+                ]);
+
+                echo json_encode(['status' => 'warning_multi_device']);
+                exit;
+            }
         }
         echo json_encode(['status' => 'alive']);
         exit;

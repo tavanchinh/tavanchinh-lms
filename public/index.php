@@ -49,6 +49,16 @@ $router->add('assign-course', 'CourseController@showAssignForm');
 $router->add('assign-process', 'CourseController@processAssign');
 $router->add('store-assign', 'CourseController@storeAssign');
 
+
+
+// ==========================================
+// 3. QUẢN LÝ TÀI CHÍNH (FINANCE CONTROLLER)
+// ==========================================
+$router->add('admin/finance', 'FinanceController@index');
+$router->add('admin/finance/create', 'FinanceController@create');
+$router->add('admin/finance/store', 'FinanceController@addTransaction');
+$router->add('admin/finance/transactions', 'FinanceController@transactions');   
+
 // ==========================================
 // 4. QUẢN LÝ CHƯƠNG & BÀI HỌC (CHAPTER & LESSON)
 // ==========================================

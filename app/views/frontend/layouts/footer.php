@@ -61,3 +61,62 @@
     </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<?php if (isset($_SESSION['user_id'])): ?>
+    <script>
+        /**
+         * KIỂM TRA ĐĂNG NHẬP ĐA THIẾT BỊ TRÊN TOÀN TRANG
+         */
+        setInterval(function() {
+            // Chỉ chạy nếu người dùng đã đăng nhập (kiểm tra qua biến toàn cục hoặc session)
+            fetch('/user/keep-alive')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'warning_multi_device') {
+                        // 1. Dừng video nếu đang ở trong trang bài học
+                        if (window.player && typeof window.player.pause === 'function') {
+                            window.player.pause();
+                        }
+
+                        // 2. Hiện thông báo cảnh báo toàn màn hình
+                        showGlobalSecurityModal();
+                    }
+                })
+                .catch(err => console.error("Security check error:", err));
+        }, 60000);
+
+        function showGlobalSecurityModal() {
+            if (document.getElementById('global-security-overlay')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'global-security-overlay';
+            overlay.style = `
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(0, 0, 0, 0.9); color: white; display: flex;
+                flex-direction: column; align-items: center; justify-content: center;
+                z-index: 999999; padding: 20px; text-align: center; backdrop-filter: blur(10px);
+            `;
+
+            overlay.innerHTML = `
+                <div style="max-width: 500px; background: #1a1a1a; padding: 40px; border-radius: 20px; border: 2px solid #ff4757; box-shadow: 0 0 30px rgba(255, 71, 87, 0.3);">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 5rem; color: #ff4757;"></i>
+                    <h2 style="margin-top: 20px; font-weight: 800; color: #ff4757;">CẢNH BÁO TRUY CẬP</h2>
+                    <p style="font-size: 1.1rem; margin: 20px 0; opacity: 0.9;">
+                        Tài khoản của bạn vừa được đăng nhập từ một thiết bị khác.
+                    </p>
+                    <div style="background: rgba(255, 71, 87, 0.1); color: #ff4757; padding: 15px; border-radius: 10px; font-size: 0.9rem; text-align: left; margin-bottom: 30px;">
+                        <strong>LƯU Ý:</strong> Chúng tôi nghiêm cấm chia sẻ tài khoản. Hệ thống sẽ <b>TỰ ĐỘNG KHÓA</b> nếu phát hiện vi phạm nhiều lần.
+                    </div>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="location.reload()" style="background: white; color: black; border: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer;">TÔI ĐÃ HIỂU</button>
+                        <a href="/dang-xuat" style="color: white; text-decoration: none; padding: 12px 30px; border: 1px solid white; border-radius: 50px; font-weight: bold;">Đăng xuất</a>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden'; // Ngăn cuộn trang khi hiện cảnh báo
+        }
+    </script>
+<?php endif; ?>

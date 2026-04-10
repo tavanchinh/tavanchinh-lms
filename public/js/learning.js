@@ -70,13 +70,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Ghi nhớ vị trí video
-            player.on('loadedmetadata', function() {
-                const currentId = document.querySelector('.lesson-item.active')?.getAttribute('data-id');
-                if (currentId) {
-                    const savedTime = localStorage.getItem('video_pos_' + currentId);
-                    if (savedTime) player.currentTime(parseFloat(savedTime));
-                }
-            });
+            //player.on('loadedmetadata', function() {
+            //   const currentId = document.querySelector('.lesson-item.active')?.getAttribute('data-id');
+            //    if (currentId) {
+            //        const savedTime = localStorage.getItem('video_pos_' + currentId);
+            //        if (savedTime) player.currentTime(parseFloat(savedTime));
+            //    }
+            // });
 
             // Theo dõi thời gian thực
             player.on('timeupdate', function() {

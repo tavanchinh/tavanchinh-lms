@@ -457,5 +457,52 @@ class UserModel extends Database {
     }
 
 
+    /**
+     * Cập nhật Session ID mới nhất của người dùng
+     * Dùng để phát hiện đăng nhập trên nhiều thiết bị
+     */
+    public function updateLastSession($userId, $sessionId) {
+        $sql = "UPDATE users SET last_session_id = ? WHERE id = ?";
+        return $this->query($sql, [$sessionId, $userId]);
+    }
+
+
+    /**
+     * Ghi lại lịch sử các trường hợp nghi ngờ đăng nhập đa thiết bị
+     */
+    public function writeSecurityLog($data) {
+        try {
+            // 1. Kiểm tra xem trong 1 giờ qua (hoặc 24 giờ) đã ghi log cho user này chưa
+            // Anh có thể thay '1 HOUR' thành '24 HOUR' nếu chỉ muốn 1 lần/ngày
+            $checkSql = "SELECT id FROM security_logs 
+                        WHERE user_id = ? 
+                        AND created_at > NOW() - INTERVAL 1 HOUR 
+                        LIMIT 1";
+            $existingLog = $this->query($checkSql, [$data['user_id']])->fetch();
+
+            // 2. Nếu đã có log rồi thì thoát, không ghi thêm nữa
+            if ($existingLog) {
+                return true; 
+            }
+
+            // 3. Nếu chưa có thì mới tiến hành INSERT
+            $sql = "INSERT INTO security_logs (
+                        user_id, ip_address, user_agent, old_session_id, new_session_id
+                    ) VALUES (?, ?, ?, ?, ?)";
+            
+            return $this->query($sql, [
+                $data['user_id'],
+                $data['ip_address'],
+                $data['user_agent'],
+                $data['old_session_id'],
+                $data['new_session_id']
+            ]);
+        } catch (Exception $e) {
+            error_log("Security Log Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
     
 }

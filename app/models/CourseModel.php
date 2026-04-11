@@ -165,21 +165,20 @@ public function updateCourse($id, $data) {
 
 
     public function syncUserCourses($userId, $courseIds = [], $paidAmounts = []) {
-        // 1. Lấy danh sách khóa học hiện tại của user từ DB để so sánh
-        $stmt = $this->query("SELECT course_id FROM user_courses WHERE user_id = ?", [$userId]);
-        $existingCourseIds = $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng ví dụ: [10, 15]
-
         // Bắt đầu Transaction để an toàn dữ liệu
         $this->db->beginTransaction(); 
-
         try {
+
+            // 1. Lấy danh sách khóa học hiện tại của user từ DB để so sánh
+            $stmt = $this->query("SELECT course_id FROM user_courses WHERE user_id = ?", [$userId]);
+            $existingCourseIds = $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng ví dụ: [10, 15]
+            
             // 2. XÓA: Những khóa học có trong DB nhưng KHÔNG có trong Form gửi lên
             $toDelete = array_diff($existingCourseIds, $courseIds);
             if (!empty($toDelete)) {
                 $placeholders = implode(',', array_fill(0, count($toDelete), '?'));
                 $this->query("DELETE FROM user_courses WHERE user_id = ? AND course_id IN ($placeholders)", array_merge([$userId], $toDelete));
             }
-
             // 3. DUYỆT DANH SÁCH TỪ FORM
             foreach ($courseIds as $courseId) {
                 $rawAmount = $paidAmounts[$courseId] ?? 0;
@@ -208,9 +207,9 @@ public function updateCourse($id, $data) {
 
                     // --- LƯU GIAO DỊCH 1 LẦN DUY NHẤT TẠI ĐÂY ---
                     $this->query(
-                        "INSERT INTO transactions (user_id, course_id, amount, type, description, created_at) 
-                        VALUES (?, ?, ?, 'enroll', ?, NOW())", 
-                        [$userId, $courseId, $cleanAmount, "Đăng ký khóa học mới qua quản trị"]
+                        "INSERT INTO finance_transactions (user_id, category_id, amount, payment_method, note, transaction_date
+                        ) VALUES (?, ?, ?, ?, ?, ?)", 
+                        [$userId, 1, $cleanAmount, 'transfer', "Đăng ký khóa học mới qua quản trị", date('Y-m-d') ]
                     );
                 }
             }

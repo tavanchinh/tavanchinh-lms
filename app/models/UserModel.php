@@ -84,7 +84,7 @@ class UserModel extends Database {
     // Hàm lấy dữ liệu có LIMIT và OFFSET
     public function getAccountsPaginated($tab, $search, $limit, $offset) {
         $role = $tab;
-        $sql = "SELECT id, name, email, phone_number, role, registered_at, created_at FROM users WHERE role = ?";
+        $sql = "SELECT * FROM users WHERE role = ?";
         $params = [$role];
 
         if (!empty($search)) {

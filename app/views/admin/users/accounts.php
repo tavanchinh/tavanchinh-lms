@@ -104,6 +104,7 @@
                         <th class="ps-4">Thông tin</th>
                         <th>Email & SĐT</th>
                         <th>Ngày đăng ký</th>
+                        <th>Ngày hoạt động cuối</th>
                         <th class="text-end pe-4">Thao tác</th>
                     </tr>
                 </thead>
@@ -128,6 +129,18 @@
                             <div class="small text-muted"><i class="bi bi-phone me-1"></i><?= htmlspecialchars($user['phone_number']) ?></div>
                         </td>
                         <td><?= date('d/m/Y', strtotime($user['registered_at'])) ?></td>
+                        <td>
+                            <div class="small text-muted">
+                                <span><?= date('d/m/Y H:i', strtotime($user['last_login'])) ?></span>
+                                
+                                <a href="/admin/users/logs/<?= $user['id'] ?>" 
+                                class="btn btn-outline-primary btn-sm ms-2" 
+                                title="Xem lịch sử truy cập"
+                                style="padding: 0px 5px; font-size: 12px;">
+                                    <i class="bi bi-clock-history"></i>
+                                </a>
+                            </div>
+                        </td>
                         <td class="text-end pe-4">
                             <div class="btn-group">
                                 <button type="button" class="btn btn-sm btn-outline-primary" onclick='openEditStudentModal(<?= json_encode($user) ?>)'>
@@ -367,7 +380,7 @@
                     timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
-                    //location.reload(); // Load lại trang để hiện học viên mới
+                    location.reload(); // Load lại trang để hiện học viên mới
                 });
             } else {
                 Swal.fire('Lỗi!', data.message, 'error');

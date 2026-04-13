@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../core/BaseController.php';
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/OrderModel.php';
 require_once __DIR__ . '/../models/CourseModel.php';
+require_once __DIR__ . '/../models/FinanceModel.php';
 
 use PayOS\PayOS;
 
@@ -12,6 +13,7 @@ class PaymentController extends BaseController {
     private $config;
     private $userModel;
     private $orderModel;
+    private $financeModel;
 
     public function __construct() {
         $rootPath = $_SERVER['DOCUMENT_ROOT'];
@@ -31,6 +33,7 @@ class PaymentController extends BaseController {
         $this->userModel = new UserModel();
         $this->orderModel = new OrderModel();
         $this->courseModel = new CourseModel(); 
+        $this->financeModel = new FinanceModel();
     }
 
     public function createPayment() {
@@ -198,6 +201,16 @@ class PaymentController extends BaseController {
                     // Bước B: Gán khóa học vào bảng user_courses
                     // (Sử dụng ID người dùng và ID khóa học lấy từ bảng orders)
                     $this->courseModel->enrollCourse($order['user_id'], $order['course_id'], $order['amount']);
+
+
+                    // 2. Ghi log tài chính bằng Model mới tạo
+                    $this->financeModel->addTransaction([
+                        'user_id'     => $order['user_id'],
+                        'order_id'    => $order['id'],
+                        'amount'      => $order['amount'],
+                        'payment_method' => 'payos',
+                        'note'        => "Thanh toán PayOS: " . $orderCode
+                    ]);
                     
                     // Bước C: Kích hoạt tài khoản (Nếu status đang là 0)
                     $this->userModel->activeUser($order['user_id']);

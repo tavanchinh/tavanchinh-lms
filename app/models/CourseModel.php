@@ -116,7 +116,7 @@ public function updateCourse($id, $data) {
     }
 
     
-    public function syncUserCourses_bk($userId, $courseIds = [], $paidAmounts = []) {
+    public function syncUserCourses($userId, $courseIds = [], $paidAmounts = []) {
         // 1. Xóa những khóa học KHÔNG nằm trong danh sách mới gửi lên
         if (!empty($courseIds)) {
             // Tạo chuỗi ?, ?, ? để dùng cho câu lệnh IN
@@ -163,66 +163,6 @@ public function updateCourse($id, $data) {
         return true;
     }
 
-
-    public function syncUserCourses($userId, $courseIds = [], $paidAmounts = []) {
-        // Bắt đầu Transaction để an toàn dữ liệu
-        $this->db->beginTransaction(); 
-        try {
-
-            // 1. Lấy danh sách khóa học hiện tại của user từ DB để so sánh
-            $stmt = $this->query("SELECT course_id FROM user_courses WHERE user_id = ?", [$userId]);
-            $existingCourseIds = $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng ví dụ: [10, 15]
-            
-            // 2. XÓA: Những khóa học có trong DB nhưng KHÔNG có trong Form gửi lên
-            $toDelete = array_diff($existingCourseIds, $courseIds);
-            if (!empty($toDelete)) {
-                $placeholders = implode(',', array_fill(0, count($toDelete), '?'));
-                $this->query("DELETE FROM user_courses WHERE user_id = ? AND course_id IN ($placeholders)", array_merge([$userId], $toDelete));
-            }
-            // 3. DUYỆT DANH SÁCH TỪ FORM
-            foreach ($courseIds as $courseId) {
-                $rawAmount = $paidAmounts[$courseId] ?? 0;
-                $cleanAmount = (int)preg_replace('/[^0-9]/', '', $rawAmount);
-                $accessData = $this->calculateAccessLevel($courseId, $cleanAmount);
-
-                // KIỂM TRA XEM KHÓA HỌC NÀY ĐÃ TỒN TẠI CHƯA
-                if (in_array($courseId, $existingCourseIds)) {
-                    // TRƯỜNG HỢP CẬP NHẬT: Không lưu giao dịch mới, chỉ update thông tin
-                    $this->query(
-                        "UPDATE user_courses SET 
-                            price_at_purchase = ?, 
-                            remaining_amount = ?, 
-                            access_level = ?, 
-                            lock_at_lesson_id = ? 
-                        WHERE user_id = ? AND course_id = ?", 
-                        [$cleanAmount, $accessData['remaining_amount'], $accessData['access_level'], $accessData['lock_at_lesson_id'], $userId, $courseId]
-                    );
-                } else {
-                    // TRƯỜNG HỢP THÊM MỚI: ĐÂY LÀ NƠI LƯU GIAO DỊCH
-                    $this->query(
-                        "INSERT INTO user_courses (user_id, course_id, price_at_purchase, remaining_amount, access_level, lock_at_lesson_id, enrolled_at) 
-                        VALUES (?, ?, ?, ?, ?, ?, NOW())", 
-                        [$userId, $courseId, $cleanAmount, $accessData['remaining_amount'], $accessData['access_level'], $accessData['lock_at_lesson_id']]
-                    );
-
-                    // --- LƯU GIAO DỊCH 1 LẦN DUY NHẤT TẠI ĐÂY ---
-                    $this->query(
-                        "INSERT INTO finance_transactions (user_id, category_id, amount, payment_method, note, transaction_date
-                        ) VALUES (?, ?, ?, ?, ?, ?)", 
-                        [$userId, 1, $cleanAmount, 'transfer', "Đăng ký khóa học mới qua quản trị", date('Y-m-d') ]
-                    );
-                }
-            }
-
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            // Log lỗi hoặc quăng exception ra ngoài
-            return false;
-        }
-    }
-    
 
     /**
      * Lấy danh sách ID các khóa học học viên ĐÃ tham gia

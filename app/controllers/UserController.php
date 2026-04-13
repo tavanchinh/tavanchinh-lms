@@ -260,7 +260,7 @@ class UserController extends BaseController {
             $userModel = new UserModel();
             $userId = $_SESSION['user_id'];
             $currentSessionId = session_id();
-
+            $userModel->updateHeartbeat($userId);
             $user = $userModel->findById($userId);
 
             if ($user && isset($user['last_session_id']) && $user['last_session_id'] !== $currentSessionId) {

@@ -7,11 +7,12 @@ class FinanceController extends BaseController {
 
     public function __construct() {
         $this->checkLogin();
-        $this->checkRole(['admin']);
+        //$this->checkRole(['admin']);
     }
 
 
     public function create() {
+        $this->checkRole(['admin']);
         $userModel = new UserModel();
 
         // Lấy danh sách danh mục thu
@@ -61,35 +62,46 @@ class FinanceController extends BaseController {
         $toDate   = $_GET['to_date'] ?? date('Y-m-t');
         $type     = $_GET['type'] ?? 'all';
 
-        // 2. Xây dựng điều kiện WHERE cho SQL
-        $where = "WHERE ft.transaction_date BETWEEN ? AND ?";
-        $params = [$fromDate, $toDate];
+        // KHỞI TẠO GIÁ TRỊ MẶC ĐỊNH (TRỐNG)
+        $transactions = [];
+        $totalIncome = 0;
+        $totalExpense = 0;
 
-        if ($type !== 'all') {
-            $where .= " AND fc.type = ?";
-            $params[] = $type;
+        // 2. CHỈ XỬ LÝ TRUY VẤN NẾU LÀ ADMIN
+        // Nếu không phải admin, bỏ qua toàn bộ logic SQL bên dưới
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            
+            // Xây dựng điều kiện WHERE cho SQL
+            $where = "WHERE ft.transaction_date BETWEEN ? AND ?";
+            $params = [$fromDate, $toDate];
+
+            if ($type !== 'all') {
+                $where .= " AND fc.type = ?";
+                $params[] = $type;
+            }
+
+            // 3. Tính toán tổng Thu/Chi dựa trên bộ lọc
+            $incomeSql = "SELECT SUM(amount) as total FROM finance_transactions ft 
+                        JOIN finance_categories fc ON ft.category_id = fc.id 
+                        $where AND fc.type = 'income'";
+            $totalIncome = $userModel->query($incomeSql, $params)->fetch()['total'] ?? 0;
+
+            $expenseSql = "SELECT SUM(amount) as total FROM finance_transactions ft 
+                        JOIN finance_categories fc ON ft.category_id = fc.id 
+                        $where AND fc.type = 'expense'";
+            $totalExpense = $userModel->query($expenseSql, $params)->fetch()['total'] ?? 0;
+
+            // 4. Lấy danh sách giao dịch theo bộ lọc
+            $transactions = $userModel->query("
+                SELECT ft.*, fc.name as category_name, fc.type 
+                FROM finance_transactions ft 
+                JOIN finance_categories fc ON ft.category_id = fc.id 
+                $where 
+                ORDER BY ft.transaction_date DESC", $params)->fetchAll();
         }
 
-        // 3. Tính toán tổng Thu/Chi dựa trên bộ lọc
-        $incomeSql = "SELECT SUM(amount) as total FROM finance_transactions ft 
-                    JOIN finance_categories fc ON ft.category_id = fc.id 
-                    $where AND fc.type = 'income'";
-        $totalIncome = $userModel->query($incomeSql, $params)->fetch()['total'] ?? 0;
-
-        $expenseSql = "SELECT SUM(amount) as total FROM finance_transactions ft 
-                    JOIN finance_categories fc ON ft.category_id = fc.id 
-                    $where AND fc.type = 'expense'";
-        $totalExpense = $userModel->query($expenseSql, $params)->fetch()['total'] ?? 0;
-
-        // 4. Lấy danh sách giao dịch theo bộ lọc
-        $transactions = $userModel->query("
-            SELECT ft.*, fc.name as category_name, fc.type 
-            FROM finance_transactions ft 
-            JOIN finance_categories fc ON ft.category_id = fc.id 
-            $where 
-            ORDER BY ft.transaction_date DESC", $params)->fetchAll();
-
         // 5. Truyền dữ liệu ra View
+        // Nếu không phải Admin, View sẽ nhận được mảng transactions trống và các tổng bằng 0
         $this->view('admin/finance/index', [
             'totalIncome'  => $totalIncome,
             'totalExpense' => $totalExpense,

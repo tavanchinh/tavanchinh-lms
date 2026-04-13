@@ -67,6 +67,11 @@ $isAdminPage = strpos($_SERVER['REQUEST_URI'], 'admin') !== false || isset($isBa
                 <li class="<?= ($currentUri == '/admin') ? 'active' : '' ?>">
                     <a href="/admin"><i class="bi bi-speedometer2 me-2"></i> Tổng quan</a>
                 </li>
+                <li class="<?= (strpos($currentUri, '/admin/finance') !== false) ? 'active' : '' ?>">
+                    <a href="/admin/finance">
+                        <i class="bi bi-currency-dollar me-2"></i> Tài chính
+                    </a>
+                </li>
                 <li class="<?= ($currentUri == '/admin/courses') ? 'active' : '' ?>">
                     <a href="/admin/courses"><i class="bi bi-journal-text me-2"></i> Khóa học</a>
                 </li>
